@@ -17,7 +17,7 @@ class Model:
         self.macrofauna = pd.read_csv("../../data/preprocessed/macrofaunaData.csv",
                 sep=",",
                 encoding="utf-8")
-        self.sediment = self.sediment.loc[:, "Gravel":"Zn"]
+        self.sediment = self.sediment.loc[:, "Gravel":"NumberofMetalsExceedingLevel2"]
         self.sediment = self.sediment.replace(r'<.*', 0, regex=True)
         self.sediment = self.sediment.apply(pd.to_numeric, errors='coerce')
 
