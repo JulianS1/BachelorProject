@@ -35,7 +35,7 @@ class Visualisation:
         atlanticValues.insert(0, "Port", atlanticSediment["Port"].values)
         # print(allValues.columns)
 
-        atlanticData = pd.merge(atlanticValues, atlanticMacrofauna, on="Port", how="inner")
+        # atlanticData = pd.merge(atlanticValues, atlanticMacrofauna, on="Port", how="inner")
         
         
         #*********Needs to be changed properly
@@ -74,7 +74,7 @@ class Visualisation:
         indianValues.insert(0, "Port", indianSediment["Port"].values)
         # print(allValues.columns)
 
-        indianData = pd.merge(indianValues, indianMacrofauna, on="Port", how="inner")
+        # indianData = pd.merge(indianValues, indianMacrofauna, on="Port", how="inner")
         
         
         #*********Needs to be changed properly

@@ -8,12 +8,12 @@ from utils.visualise import Visualisation
 from utils.models import Model
 
 HARBOUR_DATA_PATH = "../../data/rawData/AllPortSedimentQuality.xlsx"
-SAVE_Data_PATH = "../../data/preprocessed/"
+SAVE_Data_PATH = "../../data/partPreprocessed/"
 
 SAVE_RESULTS_PATH = "../../results/"
 
 
-DO_PREPROCESSING = False
+DO_PREPROCESSING = True
 DO_VISULAIZATION = False
 
 if __name__ == "__main__":
@@ -31,5 +31,8 @@ if __name__ == "__main__":
     else:
         print("Skipped visualisation")
     
-    model = Model(path=SAVE_Data_PATH)
-    model.linearModel()
+    # model = Model(path=SAVE_Data_PATH)
+    # model.linearModel()
+    # model.randomForest()
+    # model.GBoostRegressor()
+    # model.NN()
