@@ -1,9 +1,4 @@
 # BachelorProject
-ensure not replacing '<' by 0 but by proper values
-
-
-
-
 
 # ***Read***
 
@@ -34,6 +29,8 @@ Parent Directory:
 # Getting Started
 To get started with this project:
 
+Use some IDE such as 'VisualStudio Code' or 'Pycharm'
+
 ### Environment Setup
 1. **Clone this project to your computer**:
     ```bash
@@ -50,3 +47,12 @@ To get started with this project:
     ```bash
     conda activate BScProject
     ```
+
+
+
+
+
+
+    TODO:
+
+ensure not replacing '<' by 0 but by proper values
