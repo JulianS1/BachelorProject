@@ -9,30 +9,51 @@ class Visualisation:
 
         self.savePath = savePath
 
-    def correlationAnalysis(self):
-        sediment = pd.read_csv("../../data/preprocessed/sedimentData.csv",
+        
+        self.X_train = pd.read_csv("../../data/preprocessed/X_train.csv",
                 sep=",",
                 encoding="utf-8")
-        macrofauna = pd.read_csv("../../data/preprocessed/macrofaunaData.csv",
+        self.y_train = pd.read_csv("../../data/preprocessed/y_train.csv",
+                sep=",",
+                encoding="utf-8")
+        self.X_test = pd.read_csv("../../data/preprocessed/X_test.csv",
+                sep=",",
+                encoding="utf-8")
+        self.y_test = pd.read_csv("../../data/preprocessed/y_test.csv",
                 sep=",",
                 encoding="utf-8")
         
-        atlanticSediment = pd.read_csv("../../data/preprocessed/atlanticSedimentData.csv",
+        self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_scaled.csv",
                 sep=",",
                 encoding="utf-8")
-        atlanticMacrofauna = pd.read_csv("../../data/preprocessed/atlanticMacrofaunaData.csv",
+        self.y_train_scaled = pd.read_csv("../../data/preprocessed/y_train_scaled.csv",
+                sep=",",
+                encoding="utf-8")
+        self.X_test_scaled = pd.read_csv("../../data/preprocessed/X_test_scaled.csv",
+                sep=",",
+                encoding="utf-8")
+        self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_scaled.csv",
+                sep=",",
+                encoding="utf-8")
+        
+        self.atlanticSediment = pd.read_csv("../../data/partPreprocessed/atlanticSedimentData.csv",
+                sep=",",
+                encoding="utf-8")
+        self.atlanticMacrofauna = pd.read_csv("../../data/partPreprocessed/atlanticMacrofaunaData.csv",
                 sep=",",
                 encoding="utf-8")
 
-        indianSediment = pd.read_csv("../../data/preprocessed/indianSedimentData.csv",
+        self.indianSediment = pd.read_csv("../../data/partPreprocessed/indianSedimentData.csv",
                 sep=",",
                 encoding="utf-8")
-        indianMacrofauna = pd.read_csv("../../data/preprocessed/indianMacrofaunaData.csv",
+        self.indianMacrofauna = pd.read_csv("../../data/partPreprocessed/indianMacrofaunaData.csv",
                 sep=",",
                 encoding="utf-8")
 
-        atlanticValues = atlanticSediment.loc[:, "Al":"Zn"]
-        atlanticValues.insert(0, "Port", atlanticSediment["Port"].values)
+    def correlationAnalysis(self):
+
+        atlanticValues = self.atlanticSediment.loc[:, "Al":"Zn"]
+        atlanticValues.insert(0, "Port", self.atlanticSediment["Port"].values)
         # print(allValues.columns)
 
         # atlanticData = pd.merge(atlanticValues, atlanticMacrofauna, on="Port", how="inner")
@@ -70,8 +91,8 @@ class Visualisation:
 
 
 
-        indianValues = indianSediment.loc[:, "Al":"Zn"]
-        indianValues.insert(0, "Port", indianSediment["Port"].values)
+        indianValues = self.indianSediment.loc[:, "Al":"Zn"]
+        indianValues.insert(0, "Port", self.indianSediment["Port"].values)
         # print(allValues.columns)
 
         # indianData = pd.merge(indianValues, indianMacrofauna, on="Port", how="inner")
@@ -105,3 +126,5 @@ class Visualisation:
             os.path.join("../../results", file_name)
         )
         # plt.show()
+
+        

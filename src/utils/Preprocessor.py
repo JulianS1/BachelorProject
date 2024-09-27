@@ -29,33 +29,34 @@ class Preprocessor():
         atlanticPorts = df_cleaned[df_cleaned['Port'].isin(selected_ports)]
         indianPorts = df_cleaned[~df_cleaned['Port'].isin(selected_ports)]
 
-        print(len(atlanticPorts))
-        print(len(indianPorts))
+        # print(len(atlanticPorts))
+        # print(len(indianPorts))
 
-        print(atlanticPorts.head())
+        # print(atlanticPorts.head())
         # print("Remaining columns after cleaning:")
         # print(df_cleaned.columns.tolist())
-        sediment, macrofauna = self.cleanSedimentData('S', df_cleaned)
+        sediment, macrofauna = self.cleanSedimentMacrofaunaData('S', df_cleaned)
 
-        atlanticSediment, atlanticMacrofauna = self.cleanSedimentData('S', atlanticPorts)
-        indianSediment, indianMacrofauna = self.cleanSedimentData('S', indianPorts)
+        atlanticSediment, atlanticMacrofauna = self.cleanSedimentMacrofaunaData('S', atlanticPorts)
+        indianSediment, indianMacrofauna = self.cleanSedimentMacrofaunaData('S', indianPorts)
 
-        """Next part wil be updated but is only for now
+        """Next part wil be updated, this is only for now:
         """
 
-        tempSediment = sediment.loc[:, "Totalorganiccontent":"Zn"]
-        tempSediment = tempSediment.replace(r'<.*', 0, regex=True)
+        # tempSediment = sediment.loc[:, "Totalorganiccontent":"Zn"]
+        tempSediment = sediment.replace(r'<.*', 0, regex=True)
         tempSediment = tempSediment.apply(pd.to_numeric, errors='coerce')
+        tempSediment = tempSediment.drop(columns="Port", axis=1) #loc[:, "S":"d"] #
 
         tempMacrofauna = macrofauna.drop(columns="Port", axis=1) #loc[:, "S":"d"] #
         tempMacrofauna = tempMacrofauna.apply(pd.to_numeric, errors='coerce')
 
 
-
-
         X_train, X_test, y_train, y_test  = self.trainTestSplit(tempSediment, tempMacrofauna)
 
         X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled = self.normalise(X_train, X_test, y_train, y_test)
+
+
 
         X_train.to_csv(os.path.join(self.savePath,'../preprocessed/X_train.csv'), index=False)
         y_train.to_csv(os.path.join(self.savePath,'../preprocessed/y_train.csv'), index=False)
@@ -68,37 +69,41 @@ class Preprocessor():
         y_test_scaled.to_csv(os.path.join(self.savePath,'../preprocessed/y_test_scaled.csv'), index=False)
 
         # Save the two DataFrames to CSV files
-        sediment.to_csv(os.path.join(self.savePath,'sedimentData.csv'), index=False)
-        macrofauna.to_csv(os.path.join(self.savePath,'macrofaunaData.csv'), index=False)
+        sediment.to_csv(os.path.join(self.savePath,'../preprocessed/sedimentData.csv'), index=False)
+        macrofauna.to_csv(os.path.join(self.savePath,'../preprocessed/macrofaunaData.csv'), index=False)
 
-        atlanticPorts.to_csv(os.path.join(self.savePath,'atlanticData.csv'), index=False)
-        indianPorts.to_csv(os.path.join(self.savePath,'indianData.csv'), index=False)
+        atlanticPorts.to_csv(os.path.join(self.savePath,'../preprocessed/atlanticData.csv'), index=False)
+        indianPorts.to_csv(os.path.join(self.savePath,'../preprocessed/indianData.csv'), index=False)
 
-        atlanticSediment.to_csv(os.path.join(self.savePath,'atlanticSedimentData.csv'), index=False)
-        atlanticMacrofauna.to_csv(os.path.join(self.savePath,'atlanticMacrofaunaData.csv'), index=False)
-        indianSediment.to_csv(os.path.join(self.savePath,'indianSedimentData.csv'), index=False)
-        indianMacrofauna.to_csv(os.path.join(self.savePath,'indianMacrofaunaData.csv'), index=False)
+        atlanticSediment.to_csv(os.path.join(self.savePath,'../preprocessed/atlanticSedimentData.csv'), index=False)
+        atlanticMacrofauna.to_csv(os.path.join(self.savePath,'../preprocessed/atlanticMacrofaunaData.csv'), index=False)
+        indianSediment.to_csv(os.path.join(self.savePath,'../preprocessed/indianSedimentData.csv'), index=False)
+        indianMacrofauna.to_csv(os.path.join(self.savePath,'../preprocessed/indianMacrofaunaData.csv'), index=False)
         
         
-        
-
-        
 
 
-
-
-
-    def cleanSedimentData(self, split, df):
+    def cleanSedimentMacrofaunaData(self, split, df):
         if split in df.columns:
             port = df["Port"]
             index_s = df.columns.get_loc(f"{split}")
             
             # Split the DataFrame into two parts
-            df1 = df.iloc[:, :index_s]  # All columns up to 'S'
+            df1_temp = df.iloc[:, :index_s]  # All columns up to 'S'
             df2 = df.iloc[:, index_s :]  # All columns from 'S' onwards
+            df1 = df1_temp.loc[:, "Totalorganiccontent":"Zn"]
+            df1 = df1.replace(r'<.*', 0, regex=True)
+            df1 = df1.apply(pd.to_numeric, errors='coerce')
+
+            # selected_ports = ['Cape Town', 'Mossel Bay']
+            # atlanticPorts = df_cleaned[df_cleaned['Port'].isin(selected_ports)]
+            # indianPorts = df_cleaned[~df_cleaned['Port'].isin(selected_ports)]
+
+
             if len(port) == len(df2):
+                df1.insert(0, "Port", port.values)
                 df2.insert(0, "Port", port.values)
-                print("Location column added to macrofauna DataFrame.")
+                print("Location column added to DataFrames.")
             else:
                 print("The length of Location column does not match the macrofauna DataFrame.")
             
@@ -125,3 +130,6 @@ class Preprocessor():
         y_test_scaled = pd.DataFrame(target_scaler.transform(y_test), columns=y_test.columns)
         
         return X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled
+    
+    def concatDF(self, df1, df2):
+        return pd.concat([df1,df2], axis=1)

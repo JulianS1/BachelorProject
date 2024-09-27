@@ -10,10 +10,12 @@ from utils.models import Model
 HARBOUR_DATA_PATH = "../../data/rawData/AllPortSedimentQuality.xlsx"
 SAVE_Data_PATH = "../../data/partPreprocessed/"
 
+RETRIEVE_DATA_PATH = "../../data/preprocessed"
+
 SAVE_RESULTS_PATH = "../../results/"
 
 
-DO_PREPROCESSING = True
+DO_PREPROCESSING = False
 DO_VISULAIZATION = False
 
 if __name__ == "__main__":
@@ -31,8 +33,8 @@ if __name__ == "__main__":
     else:
         print("Skipped visualisation")
     
-    # model = Model(path=SAVE_Data_PATH)
+    model = Model(path=RETRIEVE_DATA_PATH)
     # model.linearModel()
-    # model.randomForest()
+    model.randomForest()
     # model.GBoostRegressor()
     # model.NN()
