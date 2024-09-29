@@ -15,8 +15,9 @@ RETRIEVE_DATA_PATH = "../../data/preprocessed"
 SAVE_RESULTS_PATH = "../../results/"
 
 
-DO_PREPROCESSING = False
+DO_PREPROCESSING = True
 DO_VISULAIZATION = False
+DO_MODELS = True
 
 if __name__ == "__main__":
     
@@ -33,8 +34,11 @@ if __name__ == "__main__":
     else:
         print("Skipped visualisation")
     
-    model = Model(path=RETRIEVE_DATA_PATH)
-    # model.linearModel()
-    model.randomForest()
-    # model.GBoostRegressor()
-    # model.NN()
+    if DO_MODELS == True:
+        model = Model(path=RETRIEVE_DATA_PATH)
+        model.linearModel()
+        model.randomForest()
+        model.GBoostRegressor()
+        model.NN()
+    else:
+        print("Skipped models")

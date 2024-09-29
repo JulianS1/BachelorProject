@@ -32,6 +32,19 @@ class Model:
                 sep=",",
                 encoding="utf-8")
 
+        # self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_SQI.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        # self.y_train_scaled = pd.read_csv("../../data/preprocessed/y_train_SQI.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        # self.X_test_scaled = pd.read_csv("../../data/preprocessed/X_test_SQI.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        # self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_SQI.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        
         self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_scaled.csv",
                 sep=",",
                 encoding="utf-8")
@@ -50,16 +63,16 @@ class Model:
 
     def linearModel(self):
         model = LinearRegression()
-        self.y_train = self.y_train['S']
-        self.y_test = self.y_test['S']
-        model.fit(self.X_train, self.y_train)
-        y_pred = model.predict(self.X_test)
+        # self.y_train_scaled = self.y_train_scaled['S']
+        # self.y_test_scaled = self.y_test_scaled['S']
+        model.fit(self.X_train_scaled, self.y_train_scaled)
+        y_pred = model.predict(self.X_test_scaled)
         
         # Step 2: Calculate evaluation metrics
-        mse = mean_squared_error(self.y_test, y_pred)
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
-        mae = mean_absolute_error(self.y_test, y_pred)
-        r2 = r2_score(self.y_test, y_pred)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
         
         # Print evaluation metrics
         print("\n Linear Regression")
@@ -70,14 +83,14 @@ class Model:
         
         # Step 4: Use SHAP to explain the model's predictions
         # Initialize the SHAP explainer
-        explainer = shap.Explainer(model, self.X_train)
+        explainer = shap.Explainer(model, self.X_train_scaled)
 
         # Calculate SHAP values
-        shap_values = explainer(self.X_test)
+        shap_values = explainer(self.X_test_scaled)
 
-        print("X_test columns", self.X_test.columns)
+        print("X_test columns", self.X_test_scaled.columns)
         print("shap_values Shape", shap_values.shape)  # Should match the number of rows and features
-        print("X_test shape", self.X_test.shape)
+        print("X_test shape", self.X_test_scaled.shape)
 
 
         shap_values_single_output = shap_values[..., 0]  # or choose any output index you want (0 to 6)
@@ -123,14 +136,14 @@ class Model:
 
         
         model = RandomForestRegressor(n_estimators=100, random_state=42)
-        model.fit(self.X_train, self.y_train)
+        model.fit(self.X_train_scaled, self.y_train_scaled)
 
         # Make predictions
-        y_pred = model.predict(self.X_test)
-        mse = mean_squared_error(self.y_test, y_pred)
+        y_pred = model.predict(self.X_test_scaled)
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
-        mae = mean_absolute_error(self.y_test, y_pred)
-        r2 = r2_score(self.y_test, y_pred)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
 
 
         print("\n Random Forest regressor")
@@ -140,14 +153,14 @@ class Model:
         print(f"R-squared (R2): {r2:.3f}")
         
         # Explainer object
-        explainer = shap.TreeExplainer(model, self.X_train)
+        explainer = shap.TreeExplainer(model, self.X_train_scaled)
 
         # Calculate SHAP values for X_test
-        shap_values = explainer(self.X_test)
+        shap_values = explainer(self.X_test_scaled)
 
         # Print shapes to confirm
         print("Shape of shap_values:", shap_values.shape)
-        print("Shape of X_test:", self.X_test.shape)
+        print("Shape of X_test:", self.X_test_scaled.shape)
 
         # Convert SHAP values object to array
         shap_values_array = shap_values.values  # This should have shape (n_samples, n_features)
@@ -168,15 +181,15 @@ class Model:
             explainer = shap.TreeExplainer(est)
             
             # Compute SHAP values for the test data
-            shap_values = explainer.shap_values(self.X_test)
+            shap_values = explainer.shap_values(self.X_test_scaled)
             
             # Append SHAP values to the list
             shap_values_list.append(shap_values[i])
-            file_name = "GBoost_SHAP_" + self.y_test.columns[i]
+            file_name = "GBoost_SHAP_" + self.y_test_scaled.columns[i]
             
             # Optionally, plot the summary for each output
-            shap.summary_plot(shap_values, self.X_test, show=False, feature_names=self.X_train.columns)
-            plt.title(f'SHAP Summary Plot for Output {self.y_test.columns[i]}')
+            shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
+            plt.title(f'SHAP Summary Plot for Output {self.y_test_scaled.columns[i]}')
             # plt.show()
             plt.savefig(
             os.path.join("../../results/SHAP", file_name)
@@ -233,13 +246,13 @@ class Model:
         
 
 
-        model.fit(self.X_train, self.y_train)
-        y_pred = model.predict(self.X_test)
+        model.fit(self.X_train_scaled, self.y_train_scaled)
+        y_pred = model.predict(self.X_test_scaled)
         
-        mse = mean_squared_error(self.y_test, y_pred)
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
-        mae = mean_absolute_error(self.y_test, y_pred)
-        r2 = r2_score(self.y_test, y_pred)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
 
         print("\n Gradient Boosting regression")
         print(f"Mean Absolute Error (MAE): {mae:.3f}")
@@ -257,15 +270,15 @@ class Model:
             explainer = shap.TreeExplainer(est)
             
             # Compute SHAP values for the test data
-            shap_values = explainer.shap_values(self.X_test)
+            shap_values = explainer.shap_values(self.X_test_scaled)
             
             # Append SHAP values to the list
             shap_values_list.append(shap_values[i])
-            file_name = "GBoost_SHAP_" + self.y_test.columns[i]
+            file_name = "GBoost_SHAP_" + self.y_test_scaled.columns[i]
             
             # Optionally, plot the summary for each output
-            shap.summary_plot(shap_values, self.X_test, show=False, feature_names=self.X_train.columns)
-            plt.title(f'SHAP Summary Plot for Output {self.y_test.columns[i]}')
+            shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
+            plt.title(f'SHAP Summary Plot for Output {self.y_test_scaled.columns[i]}')
             # plt.show()
             plt.savefig(
             os.path.join("../../results/SHAP", file_name)
@@ -281,16 +294,16 @@ class Model:
         model = MLPRegressor(hidden_layer_sizes=(50,25), activation="tanh",solver="adam" , max_iter=500, random_state=42)
 
         # Train the model
-        model.fit(self.X_train_scaled, self.y_train)
+        model.fit(self.X_train_scaled, self.y_train_scaled)
 
         # Make predictions
         y_pred = model.predict(self.X_test_scaled)
 
         # Evaluate the model
-        mse = mean_squared_error(self.y_test, y_pred)
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
-        mae = mean_absolute_error(self.y_test, y_pred)
-        r2 = r2_score(self.y_test, y_pred)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
 
         print("\n MLP regression")
         print(f'Mean Squared Error: {mae:.2f}')

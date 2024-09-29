@@ -5,6 +5,7 @@ from datetime import datetime
 import openpyxl
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
+import numpy as np
 
 
 
@@ -56,6 +57,10 @@ class Preprocessor():
 
         X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled = self.normalise(X_train, X_test, y_train, y_test)
 
+        SQI  = pd.DataFrame(df_cleaned["SQILowerlimit"])
+        X_train_SQI, X_test_SQI, y_train_SQI, y_test_SQI = self.trainTestSplit(tempSediment, SQI)
+        X_train_SQI, X_test_SQI, y_train_SQI, y_test_SQI = self.normalise(X_train_SQI, X_test_SQI, y_train_SQI, y_test_SQI)
+
 
 
         X_train.to_csv(os.path.join(self.savePath,'../preprocessed/X_train.csv'), index=False)
@@ -67,6 +72,7 @@ class Preprocessor():
         y_train_scaled.to_csv(os.path.join(self.savePath,'../preprocessed/y_train_scaled.csv'), index=False)
         X_test_scaled.to_csv(os.path.join(self.savePath,'../preprocessed/X_test_scaled.csv'), index=False)
         y_test_scaled.to_csv(os.path.join(self.savePath,'../preprocessed/y_test_scaled.csv'), index=False)
+        
 
         # Save the two DataFrames to CSV files
         sediment.to_csv(os.path.join(self.savePath,'../preprocessed/sedimentData.csv'), index=False)
@@ -79,6 +85,12 @@ class Preprocessor():
         atlanticMacrofauna.to_csv(os.path.join(self.savePath,'../preprocessed/atlanticMacrofaunaData.csv'), index=False)
         indianSediment.to_csv(os.path.join(self.savePath,'../preprocessed/indianSedimentData.csv'), index=False)
         indianMacrofauna.to_csv(os.path.join(self.savePath,'../preprocessed/indianMacrofaunaData.csv'), index=False)
+        
+        
+        X_train_SQI.to_csv(os.path.join(self.savePath,'../preprocessed/X_train_SQI.csv'), index=False)
+        X_test_SQI.to_csv(os.path.join(self.savePath,'../preprocessed/X_test_SQI.csv'), index=False)
+        y_train_SQI.to_csv(os.path.join(self.savePath,'../preprocessed/y_train_SQI.csv'), index=False)
+        y_test_SQI.to_csv(os.path.join(self.savePath,'../preprocessed/y_test_SQI.csv'), index=False)
         
         
 
@@ -126,7 +138,7 @@ class Preprocessor():
         X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=X_test.columns)
 
         target_scaler = MinMaxScaler()
-        y_train_scaled = pd.DataFrame(target_scaler.fit_transform(y_train), columns=y_train.columns)  # Reshape if y is a 1D array
+        y_train_scaled = pd.DataFrame(target_scaler.fit_transform(y_train), columns=y_train.columns)
         y_test_scaled = pd.DataFrame(target_scaler.transform(y_test), columns=y_test.columns)
         
         return X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled
