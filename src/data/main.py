@@ -8,6 +8,7 @@ from utils.visualise import Visualisation
 from utils.models import Model
 
 HARBOUR_DATA_PATH = "../../data/rawData/AllPortSedimentQuality.xlsx"
+FAUNA_DATA_PATH = "../../data/rawData/Benthos families.xlsx"
 SAVE_Data_PATH = "../../data/partPreprocessed/"
 
 RETRIEVE_DATA_PATH = "../../data/preprocessed"
@@ -22,7 +23,7 @@ DO_MODELS = True
 if __name__ == "__main__":
     
     if DO_PREPROCESSING == True:
-        preprocessing = Preprocessor(sedimentPath = HARBOUR_DATA_PATH, savePath=SAVE_Data_PATH)
+        preprocessing = Preprocessor(sedimentPath = HARBOUR_DATA_PATH, faunaPath = FAUNA_DATA_PATH, savePath=SAVE_Data_PATH)
         preprocessing.load_dataset()
     else:
         print("Skipped preprocessing")

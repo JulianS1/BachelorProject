@@ -8,11 +8,18 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.multioutput import MultiOutputRegressor
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import GridSearchCV
 
 import numpy as np
+
+
+'''
+TODO:
+Extremely random trees
+NN with high bias
+Bayesian model (heirarchical)
+'''
 
 
 class Model:
@@ -45,16 +52,29 @@ class Model:
         #         sep=",",
         #         encoding="utf-8")
         
-        self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_scaled.csv",
+        # self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_scaled.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        # self.y_train_scaled = pd.read_csv("../../data/preprocessed/y_train_scaled.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        # self.X_test_scaled = pd.read_csv("../../data/preprocessed/X_test_scaled.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+        # self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_scaled.csv",
+        #         sep=",",
+        #         encoding="utf-8")
+
+        self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_fauna.csv",
                 sep=",",
                 encoding="utf-8")
-        self.y_train_scaled = pd.read_csv("../../data/preprocessed/y_train_scaled.csv",
+        self.y_train_scaled = pd.read_csv("../../data/preprocessed/y_train_fauna.csv",
                 sep=",",
                 encoding="utf-8")
-        self.X_test_scaled = pd.read_csv("../../data/preprocessed/X_test_scaled.csv",
+        self.X_test_scaled = pd.read_csv("../../data/preprocessed/X_test_fauna.csv",
                 sep=",",
                 encoding="utf-8")
-        self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_scaled.csv",
+        self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_fauna.csv",
                 sep=",",
                 encoding="utf-8")
         
@@ -89,18 +109,20 @@ class Model:
         shap_values = explainer(self.X_test_scaled)
 
         print("X_test columns", self.X_test_scaled.columns)
-        print("shap_values Shape", shap_values.shape)  # Should match the number of rows and features
+        print("shap_values Shape", shap_values.shape)
         print("X_test shape", self.X_test_scaled.shape)
 
 
-        shap_values_single_output = shap_values[..., 0]  # or choose any output index you want (0 to 6)
+        shap_values_single_output = shap_values[..., 0]
 
-        # Now plot the bar chart for the SHAP values of this specific output
         shap.plots.bar(shap_values_single_output)
         file_name = "LinearRegression_SHAP"
 
-        plt.savefig(
-            os.path.join("../../results/SHAP", file_name))
+        output_directory = os.path.join("..", "..", "results", "SHAP")
+        os.makedirs(output_directory, exist_ok=True)
+        plt.draw()
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_directory, file_name), bbox_inches='tight') 
         plt.close()
 
         # shap.plots.bar(shap_values)
@@ -182,11 +204,14 @@ class Model:
             
             # Compute SHAP values for the test data
             shap_values = explainer.shap_values(self.X_test_scaled)
-            
+            print("num outputs: ", self.y_test_scaled.shape[1])
             # Append SHAP values to the list
             shap_values_list.append(shap_values[i])
-            file_name = "GBoost_SHAP_" + self.y_test_scaled.columns[i]
-            
+            if self.y_test_scaled.shape[1] > 1:
+                column_name = self.y_test_scaled.columns[i]
+            else:
+                column_name = self.y_test_scaled.columns[0]
+            file_name = "RF_SHAP_" + column_name
             # Optionally, plot the summary for each output
             shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
             plt.title(f'SHAP Summary Plot for Output {self.y_test_scaled.columns[i]}')
