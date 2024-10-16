@@ -9,6 +9,9 @@ class Visualisation:
 
         self.savePath = savePath
 
+        self.fauna = pd.read_csv("../../data/preprocessed/fauna.csv",
+                sep=",",
+                encoding="utf-8")
         
         self.X_train = pd.read_csv("../../data/preprocessed/X_train.csv",
                 sep=",",
@@ -126,5 +129,37 @@ class Visualisation:
             os.path.join("../../results", file_name)
         )
         # plt.show()
+
+def _compare_harbours(self):
+    self.fauna["residual"] = m1.u
+    # Obtain the median value of residuals in each neighborhood
+    medians = (
+    self.fauna.groupby("neighborhood")
+    .residual.median()
+    .to_frame("hood_residual")
+    )
+
+    # Increase fontsize
+    sns.set(font_scale=1.25)
+    # Set up figure
+    f = plt.figure(figsize=(15, 3))
+    # Grab figure's axis
+    ax = plt.gca()
+    # Generate bloxplot of values by neighborhood
+    # Note the data includes the median values merged on-the-fly
+    sns.boxplot(
+    x="neighborhood",
+    y="residual",
+    ax=ax,
+    data=self.fauna.merge(
+            medians, how="left", left_on="neighborhood", right_index=True
+    ).sort_values("hood_residual"),
+    palette="bwr",
+    )
+    # Rotate the X labels for legibility
+    f.autofmt_xdate(rotation=-90)
+    # Display
+    plt.show()
+    pass
 
         

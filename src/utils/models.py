@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, ExtraTreesRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import GridSearchCV
@@ -154,6 +154,24 @@ class Model:
         # shap.initjs()  # Initialize JS visualizations in Jupyter Notebooks
         # shap.force_plot(explainer.expected_value, shap_values_array[0], self.X_test.iloc[0])
 
+    def ER_Trees(self):
+        model = RandomForestRegressor(n_estimators=80, random_state=42)
+        model.fit(self.X_train_scaled, self.y_train_scaled)
+
+        # Make predictions
+        y_pred = model.predict(self.X_test_scaled)
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
+        rmse = np.sqrt(mse)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
+
+
+        print("\n Extra Random Trees regressor")
+        print(f"Mean Absolute Error (MAE): {mae:.3f}")
+        print(f"Mean Squared Error (MSE): {mse:.3f}")
+        print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
+        print(f"R-squared (R2): {r2:.3f}")
+
     def randomForest(self):
 
         
@@ -192,6 +210,8 @@ class Model:
 
         # # Generate SHAP dependence plot
         shap_values_list = []
+
+
         
         # shap.dependence_plot("Totalorganiccontent", shap_values_array[:,:,0], self.X_test, interaction_index="Zn")
         # shap_values_list = [[] for _ in range(7)]  # Assuming 7 outputs, one list for each output
