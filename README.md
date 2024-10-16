@@ -1,3 +1,7 @@
+# TODO:
+- remake environment.yml file from newBScProject env
+- add pytorch to environment
+
 # BachelorProject
 
 # ***Read***
