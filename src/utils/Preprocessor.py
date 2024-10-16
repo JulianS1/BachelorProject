@@ -121,7 +121,8 @@ class Preprocessor():
         return: the specific benthic macrofauna as a column in the harbour sediment dataset
         '''
 
-        df = df.loc[:,"Year":"Zn"]
+        # df = df.loc[:,"Year":"Zn"]
+        
 
         faunaRow =fauna_df.index.get_loc(fauna)
         
