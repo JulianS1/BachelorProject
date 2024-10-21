@@ -141,6 +141,7 @@ class Preprocessor():
         new["Station"] = new["Station"].str.replace(r"^DBN(\d+)$", r"DB\1", regex=True)
         new = pd.merge(new, df, how="inner", left_on=["Year", "Station"], right_on=["Year", "Station(Newnumber)"])
         new = new.dropna(subset=[fauna])
+        # new = new[new['Spionidae'] >= 100]
         # print(new[fauna])
         # new[fauna] = pd.to_numeric(new[fauna], errors='raise')
         # new[fauna] = np.log(new[fauna])

@@ -8,6 +8,7 @@ from folium import Choropleth, CircleMarker
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 import webbrowser as wb
+from folium.plugins import HeatMap
 
 
 class Mapper:
@@ -42,13 +43,18 @@ class Mapper:
     
     def _get_color(self, spionidae_count):
             """Return a color based on the global variance of the Spionidae count."""
+            # print(spionidae_count)
             if spionidae_count < self.spionidae_mean - self.spionidae_std:
+                # print("red")
                 return 'red'  # Low values
             elif self.spionidae_mean - self.spionidae_std <= spionidae_count < self.spionidae_mean:
+                # print("orange")
                 return 'orange'  # Below average
             elif self.spionidae_mean <= spionidae_count < self.spionidae_mean + self.spionidae_std:
-                return 'yellow'  # Above average
+                # print("yellow")
+                return 'lightgreen'  # Above average
             else:
+                # print("green")
                 return 'green'  # High values
 
     def _make_map(self):
@@ -67,14 +73,15 @@ class Mapper:
         average_locations = self.data.groupby('Station(Newnumber)').agg({
             'Latitude': 'mean',
             'Longitude': 'mean',
-            'Year': 'first',  # Example: taking the first year entry as an example
             'Location': 'first',
             'SQILowerlimit': 'mean',
             'Spionidae': 'mean',  # Similar for Spionidae
             'Port': 'first'  # Take the first port as an example
         }).reset_index()
         self.spionidae_mean = average_locations['Spionidae'].mean()
-        self.spionidae_std = average_locations['Spionidae'].std()
+        self.spionidae_std = average_locations['Spionidae'].std() / 2
+
+        print(average_locations)
         
 
         for _, row in average_locations.iterrows():
@@ -85,7 +92,6 @@ class Mapper:
                     Station: {row['Station(Newnumber)']}\n
                     Average Latitude: {row['Latitude']}\n
                     Average Longitude: {row['Longitude']}\n
-                    Year: {row['Year']}\n
                     Location: {row['Location']}\n
                     Average SQI: {row['SQILowerlimit']}\n
                     Average Spionidae: {row['Spionidae']}\n
@@ -93,6 +99,10 @@ class Mapper:
                 """, parse_html=True),
                 icon=folium.Icon(color=marker_color, icon='info-sign')
             ).add_to(m)
+        heat_data = [[row['Latitude'], row['Longitude'], row['Spionidae']] for index, row in self.data.iterrows()]
+
+        # Add HeatMap to the map
+        HeatMap(heat_data, radius=15, max_zoom=13).add_to(m)
 
 
         html_file = 'south_africa_map.html'

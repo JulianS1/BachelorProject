@@ -18,9 +18,9 @@ SAVE_RESULTS_PATH = "../../results/"
 
 
 DO_PREPROCESSING = False
-DO_VISULAIZATION = False
+DO_VISULAIZATION = True
 DO_MODELS = False
-DO_MAP = True
+DO_MAP = False
 
 if __name__ == "__main__":
     
@@ -33,18 +33,19 @@ if __name__ == "__main__":
     if DO_VISULAIZATION == True:
         visualisor = Visualisation(savePath= SAVE_RESULTS_PATH)
         # visualisor.correlationAnalysis()
-        visualisor._compare_harbours()
+        # visualisor._compare_harbours()
+        visualisor._cluster_analysis()
     
     else:
         print("Skipped visualisation")
     
     if DO_MODELS == True:
         model = Model(path=RETRIEVE_DATA_PATH)
-        model.linearModel()
-        model.ER_Trees()
-        model.randomForest()
-        model.GBoostRegressor()
-        model.NN()
+        # model.linearModel()
+        # model.ER_Trees()
+        # model.randomForest()
+        # model.GBoostRegressor()
+        # model.NN()
     else:
         print("Skipped models")
 

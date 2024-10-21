@@ -4,12 +4,12 @@ import pandas as pd
 import shap
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso, LassoCV, MultiTaskLassoCV, RidgeCV, MultiTaskElasticNetCV, BayesianRidge
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, ExtraTreesRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.neural_network import MLPRegressor
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, KFold
 
 import numpy as np
 
@@ -82,13 +82,48 @@ class Model:
 
 
     def linearModel(self):
+
+        # lasso_cv = RidgeCV(cv=5)  # 5-fold cross-validation
+        # lasso_cv.fit(self.X_train_scaled, self.y_train_scaled)
+        # lasso_best = Lasso(alpha=lasso_cv.alpha_)
+        # lasso_best.fit(self.X_train_scaled, self.y_train_scaled)
+        # y_pred = lasso_best.predict(self.X_test_scaled)
+
+        
+
         model = LinearRegression()
         # self.y_train_scaled = self.y_train_scaled['S']
         # self.y_test_scaled = self.y_test_scaled['S']
+        
         model.fit(self.X_train_scaled, self.y_train_scaled)
         y_pred = model.predict(self.X_test_scaled)
         
-        # Step 2: Calculate evaluation metrics
+
+        # param_grid = {
+        #     'alpha_1': [1e-6, 1e-5, 1e-4],
+        #     'alpha_2': [1e-6, 1e-5, 1e-4],
+        #     'lambda_1': [1e-6, 1e-5, 1e-4],
+        #     'lambda_2': [1e-6, 1e-5, 1e-4]
+        # }
+
+        # bayes = BayesianRidge()
+        # bayes.fit(self.X_train_scaled, self.y_train_scaled)
+        # y_pred = bayes.predict(self.X_test_scaled)
+
+        # cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+        # grid_search = GridSearchCV(bayes, param_grid, cv=cv, scoring='neg_mean_squared_error')
+
+        # # Fit the grid search
+        # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
+
+        # # Get the best estimator and parameters
+        # best_bayes = grid_search.best_estimator_
+        # best_params = grid_search.best_params_
+
+        # print("Best Parameters:", best_params)
+        # y_pred = best_bayes.predict(self.X_test_scaled)
+
         mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(self.y_test_scaled, y_pred)
@@ -100,9 +135,7 @@ class Model:
         print(f"Mean Squared Error (MSE): {mse:.3f}")
         print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
         print(f"R-squared (R2): {r2:.3f}")
-        
-        # Step 4: Use SHAP to explain the model's predictions
-        # Initialize the SHAP explainer
+
         explainer = shap.Explainer(model, self.X_train_scaled)
 
         # Calculate SHAP values
@@ -127,8 +160,7 @@ class Model:
 
         # shap.plots.bar(shap_values)
 
-        # Step 5: Plot the SHAP values
-        # Summary plot
+
 
         # print("Shape of shap_values:", shap_values.shape)
         # print("Shape of X_test:", self.X_test.shape)
@@ -177,9 +209,34 @@ class Model:
         
         model = RandomForestRegressor(n_estimators=100, random_state=42)
         model.fit(self.X_train_scaled, self.y_train_scaled)
-
-        # Make predictions
         y_pred = model.predict(self.X_test_scaled)
+
+        rf = RandomForestRegressor(random_state=42)
+
+        param_grid = {
+            'n_estimators': [50, 100, 200],
+            'max_depth': [None, 10, 20, 30],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4],
+            'max_features': ['auto', 'sqrt', 'log2']
+        }
+
+        # grid_search = GridSearchCV(
+        #     estimator=rf,
+        #     param_grid=param_grid,
+        #     scoring='neg_mean_squared_error',  
+        #     cv=5,
+        #     n_jobs=-1,
+        #     verbose=2
+        # )
+
+        # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
+
+        # print("Best parameters found: ", grid_search.best_params_)
+        # print("Best score: ", grid_search.best_score_)
+
+        # y_pred = grid_search.best_estimator_.predict(self.X_test_scaled)
+
         mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(self.y_test_scaled, y_pred)
@@ -192,23 +249,17 @@ class Model:
         print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
         print(f"R-squared (R2): {r2:.3f}")
         
-        # Explainer object
         explainer = shap.TreeExplainer(model, self.X_train_scaled)
 
-        # Calculate SHAP values for X_test
         shap_values = explainer(self.X_test_scaled)
 
-        # Print shapes to confirm
         print("Shape of shap_values:", shap_values.shape)
         print("Shape of X_test:", self.X_test_scaled.shape)
 
-        # Convert SHAP values object to array
-        shap_values_array = shap_values.values  # This should have shape (n_samples, n_features)
+        shap_values_array = shap_values.values 
 
-        # Print shape of the shap_values_array
         print("Shape of shap_values_array:", shap_values_array[0].shape)
 
-        # # Generate SHAP dependence plot
         shap_values_list = []
 
 
@@ -336,13 +387,30 @@ class Model:
 
     def NN(self):
 
-        model = MLPRegressor(hidden_layer_sizes=(50,25), activation="tanh",solver="adam" , max_iter=500, random_state=42)
+        model = MLPRegressor(activation='relu', alpha=0.0001, hidden_layer_sizes=(100, 50), learning_rate='constant', solver='adam')
 
         # Train the model
         model.fit(self.X_train_scaled, self.y_train_scaled)
 
-        # Make predictions
         y_pred = model.predict(self.X_test_scaled)
+
+        
+
+        param_grid = {
+            'hidden_layer_sizes': [(50,), (50, 25), (100,), (100, 50)],
+            'activation': ['tanh', 'relu'],
+            'solver': ['adam', 'sgd'],
+            'alpha': [0.00001, 0.0001, 0.0005],
+            'learning_rate': ['constant', 'adaptive'],
+            # 'learning_rate_init': [0.001, 0.0001, 0.01],
+            'warm_start': [True, False],
+            # 'momentum': [0.9,0.8,0.7]
+        }
+        # print(self.y_train_scaled.values.reshape(-1))
+
+        # grid_search = GridSearchCV(MLPRegressor(), param_grid, cv=3)
+        # grid_search.fit(self.X_train_scaled, self.y_train_scaled.squeeze())
+        # y_pred = grid_search.best_estimator_.predict(self.X_test_scaled)
 
         # Evaluate the model
         mse = mean_squared_error(self.y_test_scaled, y_pred)
@@ -355,16 +423,7 @@ class Model:
         print(f"Mean Squared Error (MSE): {mse:.3f}")
         print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
         print(f"R-squared (R2): {r2:.3f}")
-
-        # param_grid = {
-        #     'hidden_layer_sizes': [(50,), (100,), (100, 50)],
-        #     'activation': ['tanh', 'relu'],
-        #     'solver': ['adam', 'sgd'],
-        # }
-
-        # grid_search = GridSearchCV(MLPRegressor(), param_grid, cv=3)
-        # grid_search.fit(X_train_scaled, y_train)
-
+        
         # print("Best parameters:", grid_search.best_params_)
 
     

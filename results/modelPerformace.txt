@@ -1,0 +1,19 @@
+***Not stable*** 
+ 
+ MLP regression
+Mean Squared Error: 0.10
+Mean Squared Error (MSE): 0.031
+Root Mean Squared Error (RMSE): 0.177
+R-squared (R2): 0.217
+Best parameters: {'activation': 'relu', 'alpha': 0.0001, 'hidden_layer_sizes': (100, 50), 'learning_rate': 'constant', 'solver': 'adam'}
+
+
+
+
+***Stable***
+ Random Forest regressor
+Mean Absolute Error (MAE): 0.099
+Mean Squared Error (MSE): 0.029
+Root Mean Squared Error (RMSE): 0.171
+R-squared (R2): 0.273
+Best parameters found:  {'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 50}
