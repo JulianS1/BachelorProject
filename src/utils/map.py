@@ -66,8 +66,8 @@ class Mapper:
         # Find average of loacations
         # print("Showing latitude in decimal: \n", self.data["Latitude"].apply(self._dms_to_decimal))
         
-        self.data["Latitude"] = self.data["Latitude"].apply(self._dms_to_decimal)
-        self.data["Longitude"] = self.data["Longitude"].apply(self._dms_to_decimal)
+        # self.data["Latitude"] = self.data["Latitude"].apply(self._dms_to_decimal)
+        # self.data["Longitude"] = self.data["Longitude"].apply(self._dms_to_decimal)
 
         # for _, row in self.data.iterrows():
         average_locations = self.data.groupby('Station(Newnumber)').agg({
@@ -106,5 +106,5 @@ class Mapper:
 
 
         html_file = 'south_africa_map.html'
-        m.save("../../results/maps/", html_file)
-        wb.open('file://' + os.path.realpath(html_file))
+        m.save("../../results/maps/"+ html_file)
+        wb.open('file://' + os.path.realpath("../../results/maps/"+ html_file))

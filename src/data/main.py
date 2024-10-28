@@ -20,8 +20,8 @@ SAVE_RESULTS_PATH = "../../results/"
 
 DO_PREPROCESSING = False
 DO_VISULAIZATION = False
-DO_MODELS = True
-DO_MAP = False
+DO_MODELS = False
+DO_MAP = True
 DO_TESTING = False
 
 if __name__ == "__main__":
