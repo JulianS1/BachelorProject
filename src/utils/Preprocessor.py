@@ -6,6 +6,9 @@ import openpyxl
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
+import geopandas as gpd
+from shapely.geometry import Point
 
 '''
 TODO:
@@ -140,22 +143,50 @@ class Preprocessor():
         new["Year"] = new["Year"].astype(float)
         new["Station"] = new["Station"].str.replace(r"^DBN(\d+)$", r"DB\1", regex=True)
         new = pd.merge(new, df, how="inner", left_on=["Year", "Station"], right_on=["Year", "Station(Newnumber)"])
-        new = new.dropna(subset=[fauna])
+        new[fauna] = new[fauna].fillna(value=0.0)
         # new = new[new['Spionidae'] >= 100]
         # print(new[fauna])
         # new[fauna] = pd.to_numeric(new[fauna], errors='raise')
         # new[fauna] = np.log(new[fauna])
         # print(new["Station"])
-
-
+        new["Latitude"] = new["Latitude"].apply(self._dms_to_decimal)
+        new["Longitude"] = new["Longitude"].apply(self._dms_to_decimal)
+        # print(new.head())
+        # new = self._replace_less_than(new)
         new.to_csv(os.path.join(self.savePath,"../preprocessed/fauna.csv"), index=False)
-
-        new_df = new.loc[:, "Totalorganiccontent":"Zn"]
-        new_fauna = pd.DataFrame(new["Spionidae"])
-        print(new_fauna)
-
+        new['geometry'] = new.apply(lambda row: Point((row['Longitude'], row['Latitude'])), axis=1)
+        # print(new.head())
         
-        return new_df, new_fauna
+        gdf = gpd.GeoDataFrame(new, geometry='geometry')
+        gdf.to_csv(os.path.join(self.savePath,"../preprocessed/GDF_fauna.csv"), index=False)
+
+        # Set the coordinate reference system (CRS), e.g., WGS84 (EPSG:4326) for latitude/longitude
+        gdf.set_crs(epsg=4326, inplace=True)
+
+
+
+        new_fauna = pd.DataFrame(new["Spionidae"])
+        new = new.drop(columns=["Location", "Latitude", "Longitude", "Year","Station(Newnumber)", "Gravel","Verycoarsegrainedsand","Coarsegrainedsand","Mediumgrainedsand","Finegrainedsand","Veryfinegrainedsand","Mud","Meanphi","Meanmm","Medianphi","Medianmm","Sorting","Skewness"])
+        new_df = new.loc[:, "Port":"Zn"]
+        new = new.loc[:, "Totalorganiccontent":"Zn"]
+        
+        
+        encoder = OneHotEncoder(sparse_output=False)
+
+        encoded_ports = encoder.fit_transform(new_df[['Port']])
+
+        df_cleaned = new_df.dropna(subset=['Zn']).reset_index(drop=True)
+        # print(encoded_ports)
+
+        encoded_df = pd.DataFrame(encoded_ports, columns=encoder.get_feature_names_out(['Port']))
+        encoded_df_reset = encoded_df.reset_index(drop=True)
+
+        df_encoded = pd.concat([df_cleaned.drop(columns=['Port']), encoded_df_reset], axis=1)  
+        print(df_encoded.head())               
+
+        # df_encoded = self._replace_less_than(df_encoded)
+        
+        return new, new_fauna
 
     def _replace_less_than(self, df):
         df = df.replace(r"<.*", 0, regex=True)
@@ -211,3 +242,23 @@ class Preprocessor():
     
     def _concatDF(self, df1, df2):
         return pd.concat([df1,df2], axis=1)
+    
+    def _dms_to_decimal(self, dms):
+        """Convert DMS to decimal degrees."""
+        dms = dms.replace('"', '').strip()
+        # print("DMS: ", dms)  # Remove double quotes and trim spaces
+        direction = dms[-1:]
+        # print("Direction: ",direction)
+        degrees, minutes_seconds = dms[:-1].split("°")
+        # print("Minutes & Seconds: ", minutes_seconds)
+        minutes, seconds = minutes_seconds.split("'")
+        # seconds = seconds_direction[:-1]
+        # direction = seconds_direction[-1]
+
+        decimal = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
+        
+        # Adjust for southern or western hemispheres
+        if direction in ['S', 'W']:
+            decimal *= -1
+        # print(decimal)
+        return decimal

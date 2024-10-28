@@ -4,12 +4,13 @@ import pandas as pd
 import shap
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression, Lasso, LassoCV, MultiTaskLassoCV, RidgeCV, MultiTaskElasticNetCV, BayesianRidge
+from sklearn.linear_model import LinearRegression, Lasso, LassoCV, MultiTaskLassoCV, RidgeCV, MultiTaskElasticNetCV, BayesianRidge, Ridge, ElasticNetCV
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, ExtraTreesRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.base import RegressorMixin
 
 import numpy as np
 
@@ -83,20 +84,38 @@ class Model:
 
     def linearModel(self):
 
-        # lasso_cv = RidgeCV(cv=5)  # 5-fold cross-validation
+        # lasso_cv = RidgeCV(cv=5)
         # lasso_cv.fit(self.X_train_scaled, self.y_train_scaled)
         # lasso_best = Lasso(alpha=lasso_cv.alpha_)
         # lasso_best.fit(self.X_train_scaled, self.y_train_scaled)
         # y_pred = lasso_best.predict(self.X_test_scaled)
 
         
+        ridge = Ridge()
 
-        model = LinearRegression()
+        param_grid = {
+            'alpha': [0.01, 0.1, 1, 10, 100]
+        }
+
+        grid_search = GridSearchCV(
+            estimator=ridge,
+            param_grid=param_grid,
+            cv=5,
+            scoring='neg_mean_squared_error',
+        )
+        grid_search.fit(self.X_train_scaled, self.y_train_scaled)
+
+        model = grid_search.best_estimator_
+        y_pred = model.predict(self.X_test_scaled)
+
+        
+
+        # model = LinearRegression()
         # self.y_train_scaled = self.y_train_scaled['S']
         # self.y_test_scaled = self.y_test_scaled['S']
         
-        model.fit(self.X_train_scaled, self.y_train_scaled)
-        y_pred = model.predict(self.X_test_scaled)
+        # model.fit(self.X_train_scaled, self.y_train_scaled)
+        # y_pred = model.predict(self.X_test_scaled)
         
 
         # param_grid = {
@@ -148,18 +167,22 @@ class Model:
 
         shap_values_single_output = shap_values[..., 0]
 
-        shap.plots.bar(shap_values_single_output)
+        shap.plots.bar(shap_values_single_output, show=False)
         file_name = "LinearRegression_SHAP"
 
         output_directory = os.path.join("..", "..", "results", "SHAP")
-        os.makedirs(output_directory, exist_ok=True)
-        plt.draw()
-        plt.tight_layout()
+        os.makedirs("../../results/SHAP", exist_ok=True)
+        # plt.draw()
+        # plt.tight_layout()
         plt.savefig(os.path.join(output_directory, file_name), bbox_inches='tight') 
         plt.close()
 
         # shap.plots.bar(shap_values)
-
+        shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
+        plt.savefig(
+        os.path.join("../../results/SHAP", "LR_SHAP_Spionidae.png")
+        )
+        plt.close()
 
 
         # print("Shape of shap_values:", shap_values.shape)
@@ -207,7 +230,7 @@ class Model:
     def randomForest(self):
 
         
-        model = RandomForestRegressor(n_estimators=100, random_state=42)
+        model = RandomForestRegressor(max_depth= None, max_features= 'sqrt', min_samples_leaf= 4, min_samples_split= 2, n_estimators= 100, random_state=42)
         model.fit(self.X_train_scaled, self.y_train_scaled)
         y_pred = model.predict(self.X_test_scaled)
 
@@ -221,14 +244,14 @@ class Model:
             'max_features': ['auto', 'sqrt', 'log2']
         }
 
-        # grid_search = GridSearchCV(
-        #     estimator=rf,
-        #     param_grid=param_grid,
-        #     scoring='neg_mean_squared_error',  
-        #     cv=5,
-        #     n_jobs=-1,
-        #     verbose=2
-        # )
+        grid_search = GridSearchCV(
+            estimator=rf,
+            param_grid=param_grid,
+            scoring='neg_mean_squared_error',  
+            cv=5,
+            n_jobs=-1,
+            verbose=2
+        )
 
         # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
 
@@ -261,36 +284,39 @@ class Model:
         print("Shape of shap_values_array:", shap_values_array[0].shape)
 
         shap_values_list = []
-
-
+        shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
+        plt.savefig(
+        os.path.join("../../results/SHAP", "RF_SHAP_Spionidae.png")
+        )
+        plt.close()
         
         # shap.dependence_plot("Totalorganiccontent", shap_values_array[:,:,0], self.X_test, interaction_index="Zn")
         # shap_values_list = [[] for _ in range(7)]  # Assuming 7 outputs, one list for each output
 
-        for i, est in enumerate(model.estimators_):
-            print(f"Explaining output {i + 1}")
+        # for i, est in enumerate(model.estimators_):
+        #     print(f"Explaining output {i + 1}")
             
-            # Create SHAP explainer using TreeExplainer for tree-based models
-            explainer = shap.TreeExplainer(est)
+        #     # Create SHAP explainer using TreeExplainer for tree-based models
+        #     explainer = shap.TreeExplainer(est)
             
-            # Compute SHAP values for the test data
-            shap_values = explainer.shap_values(self.X_test_scaled)
-            print("num outputs: ", self.y_test_scaled.shape[1])
-            # Append SHAP values to the list
-            shap_values_list.append(shap_values[i])
-            if self.y_test_scaled.shape[1] > 1:
-                column_name = self.y_test_scaled.columns[i]
-            else:
-                column_name = self.y_test_scaled.columns[0]
-            file_name = "RF_SHAP_" + column_name
-            # Optionally, plot the summary for each output
-            shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
-            plt.title(f'SHAP Summary Plot for Output {self.y_test_scaled.columns[i]}')
-            # plt.show()
-            plt.savefig(
-            os.path.join("../../results/SHAP", file_name)
-            )
-            plt.close()
+        #     # Compute SHAP values for the test data
+        #     shap_values = explainer.shap_values(self.X_test_scaled)
+        #     print("num outputs: ", self.y_test_scaled.shape[1])
+        #     # Append SHAP values to the list
+        #     shap_values_list.append(shap_values[i])
+        #     if self.y_test_scaled.shape[1] > 1:
+        #         column_name = self.y_test_scaled.columns[i]
+        #     else:
+        #         column_name = self.y_test_scaled.columns[0]
+        #     file_name = "RF_SHAP_" + column_name
+        #     # Optionally, plot the summary for each output
+        #     shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
+        #     plt.title(f'SHAP Summary Plot for Output {self.y_test_scaled.columns[i]}')
+        #     # plt.show()
+        #     plt.savefig(
+        #     os.path.join("../../results/SHAP", file_name)
+        #     )
+        #     plt.close()
 
         # # Loop over each estimator in the RandomForest model
         # for est in model.estimators_:
@@ -387,7 +413,7 @@ class Model:
 
     def NN(self):
 
-        model = MLPRegressor(activation='relu', alpha=0.0001, hidden_layer_sizes=(100, 50), learning_rate='constant', solver='adam')
+        model = MLPRegressor(random_state=42, activation='relu', alpha=0.0001, hidden_layer_sizes=(100, 50), learning_rate='constant', solver='adam')
 
         # Train the model
         model.fit(self.X_train_scaled, self.y_train_scaled)
@@ -427,4 +453,4 @@ class Model:
         # print("Best parameters:", grid_search.best_params_)
 
     
-    
+

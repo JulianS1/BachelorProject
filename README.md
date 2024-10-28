@@ -48,15 +48,24 @@ Use some IDE such as 'VisualStudio Code' or 'Pycharm'
     This will create a Conda environment with all the required packages, matching the environment in which the project was developed.
 
 3. **Activate the Environment**:
+    Follow the terminal prompts, or enter the following into your terminal:
+
     ```bash
     conda activate BScProject
     ```
 
 
+4. **Run the Project**:
+
+    - Navigate to the directory containing main.py
+    '''bash
+    cd src/data
+    '''
+
+    - Run the main.py file
+    '''bash
+    python main.py
+    '''
 
 
 
-
-    TODO:
-
-ensure not replacing '<' by 0 but by proper values

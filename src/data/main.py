@@ -7,6 +7,7 @@ from utils.Preprocessor import Preprocessor
 from utils.visualise import Visualisation
 from utils.models import Model
 from utils.map import Mapper
+from utils.testing import Tester
 
 HARBOUR_DATA_PATH = "../../data/rawData/AllPortSedimentQuality.xlsx"
 FAUNA_DATA_PATH = "../../data/rawData/Benthos families.xlsx"
@@ -18,9 +19,10 @@ SAVE_RESULTS_PATH = "../../results/"
 
 
 DO_PREPROCESSING = False
-DO_VISULAIZATION = True
-DO_MODELS = False
+DO_VISULAIZATION = False
+DO_MODELS = True
 DO_MAP = False
+DO_TESTING = False
 
 if __name__ == "__main__":
     
@@ -41,16 +43,24 @@ if __name__ == "__main__":
     
     if DO_MODELS == True:
         model = Model(path=RETRIEVE_DATA_PATH)
-        # model.linearModel()
+        model.linearModel()
         # model.ER_Trees()
-        # model.randomForest()
+        model.randomForest()
         # model.GBoostRegressor()
-        # model.NN()
+        model.NN()
     else:
         print("Skipped models")
 
     if DO_MAP == True:
         map = Mapper()
         map._make_map()
+    else:
+        print("Skipped mapping")
+
+    if DO_TESTING == True:
+        test =Tester(SAVE_RESULTS_PATH)
+        test._anova()
+        # test._ols()
+        # test._pearson()
     else:
         print("Skipped mapping")

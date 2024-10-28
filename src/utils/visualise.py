@@ -194,7 +194,7 @@ class Visualisation:
         # cluster_summary = self.fauna.groupby('cluster').mean()
         # print(cluster_summary)
 
-        contingency_table = pd.crosstab(self.fauna['Station(Newnumber)'], self.fauna['cluster'])
+        contingency_table = pd.crosstab(self.fauna['Spionidae'], self.fauna['Port'])
 
         # print("Contingency Table:")
         # print(contingency_table)
@@ -209,6 +209,6 @@ class Visualisation:
 
         alpha = 0.05  # Significance level
         if p_value < alpha:
-            print("Reject the null hypothesis: There is a significant correlation between Port and cluster.")
+            print("Reject the null hypothesis: There is a significant correlation between Port and Spionidae.")
         else:
-            print("Fail to reject the null hypothesis: No significant correlation between Port and cluster.")
+            print("Fail to reject the null hypothesis: No significant correlation between Port and Spionidae.")

@@ -106,5 +106,5 @@ class Mapper:
 
 
         html_file = 'south_africa_map.html'
-        m.save(html_file)
+        m.save("../../results/maps/", html_file)
         wb.open('file://' + os.path.realpath(html_file))
