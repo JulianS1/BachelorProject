@@ -8,6 +8,7 @@ from utils.visualise import Visualisation
 from utils.models import Model
 from utils.map import Mapper
 from utils.testing import Tester
+from utils.bayes import Bayes
 
 HARBOUR_DATA_PATH = "../../data/rawData/AllPortSedimentQuality.xlsx"
 FAUNA_DATA_PATH = "../../data/rawData/Benthos families.xlsx"
@@ -20,8 +21,9 @@ SAVE_RESULTS_PATH = "../../results/"
 
 DO_PREPROCESSING = False
 DO_VISULAIZATION = False
-DO_MODELS = False
-DO_MAP = True
+DO_MODELS = True
+DO_BAYES = False
+DO_MAP = False
 DO_TESTING = False
 
 if __name__ == "__main__":
@@ -50,6 +52,12 @@ if __name__ == "__main__":
         model.NN()
     else:
         print("Skipped models")
+
+    if DO_BAYES == True:
+        model = Bayes()
+
+    else:
+        print("Skipped bayes")
 
     if DO_MAP == True:
         map = Mapper()

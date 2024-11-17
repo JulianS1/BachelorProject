@@ -65,6 +65,7 @@ class Model:
         # self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_scaled.csv",
         #         sep=",",
         #         encoding="utf-8")
+        # print(self.X_test_scaled.head())
 
         self.X_train_scaled = pd.read_csv("../../data/preprocessed/X_train_fauna.csv",
                 sep=",",
@@ -78,9 +79,13 @@ class Model:
         self.y_test_scaled = pd.read_csv("../../data/preprocessed/y_test_fauna.csv",
                 sep=",",
                 encoding="utf-8")
-        
-        
+        # self.X_train_locations = self.X_train_scaled.loc[:, "Port_Cape Town":]
+        # self.X_train_scaled = self.X_train_scaled.loc[:, :"SQILowerlimit"]
+        # self.X_test_locations = self.X_test_scaled.loc[:, "Port_Cape Town":]
+        # self.X_test_scaled = self.X_test_scaled.loc[:, :"SQILowerlimit"]
 
+        self.y_train_scaled = self.y_train_scaled.values.ravel()
+        self.y_test_scaled = self.y_test_scaled.values.ravel()
 
     def linearModel(self):
 
@@ -157,12 +162,7 @@ class Model:
 
         explainer = shap.Explainer(model, self.X_train_scaled)
 
-        # Calculate SHAP values
         shap_values = explainer(self.X_test_scaled)
-
-        print("X_test columns", self.X_test_scaled.columns)
-        print("shap_values Shape", shap_values.shape)
-        print("X_test shape", self.X_test_scaled.shape)
 
 
         shap_values_single_output = shap_values[..., 0]
@@ -172,8 +172,6 @@ class Model:
 
         output_directory = os.path.join("..", "..", "results", "SHAP")
         os.makedirs("../../results/SHAP", exist_ok=True)
-        # plt.draw()
-        # plt.tight_layout()
         plt.savefig(os.path.join(output_directory, file_name), bbox_inches='tight') 
         plt.close()
 
@@ -184,30 +182,26 @@ class Model:
         )
         plt.close()
 
+        self._remake_data(shap_values, 10)
 
-        # print("Shape of shap_values:", shap_values.shape)
-        # print("Shape of X_test:", self.X_test.shape)
-        # shap_values_array = shap_values.values
+        grid_search.fit(self.X_train_scaled, self.y_train_scaled)
 
-        # # Take the mean SHAP values across the last dimension (outputs)
-        # shap_values_mean = np.mean(shap_values_array, axis=2)  # Average across outputs
+        model = grid_search.best_estimator_
+        y_pred = model.predict(self.X_test_scaled)
 
-        # # Print the shape to confirm
-        # print("Shape of mean shap_values:", shap_values_mean.shape)
-
-        # Generate summary plot for mean SHAP values
-        # shap.summary_plot(shap_values_mean, self.X_test)
-        # plt.close()
-
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
+        rmse = np.sqrt(mse)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
         
+        # Print evaluation metrics
+        print("\n Linear Regression")
+        print(f"Mean Absolute Error (MAE): {mae:.3f}")
+        print(f"Mean Squared Error (MSE): {mse:.3f}")
+        print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
+        print(f"R-squared (R2): {r2:.3f}")
 
-        
 
-        # shap.summary_plot(shap_values, X_test)
-
-        # Optional: Force plot for a specific prediction (you can specify an index)
-        # shap.initjs()  # Initialize JS visualizations in Jupyter Notebooks
-        # shap.force_plot(explainer.expected_value, shap_values_array[0], self.X_test.iloc[0])
 
     def ER_Trees(self):
         model = RandomForestRegressor(n_estimators=80, random_state=42)
@@ -250,7 +244,7 @@ class Model:
             scoring='neg_mean_squared_error',  
             cv=5,
             n_jobs=-1,
-            verbose=2
+            verbose=0
         )
 
         # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
@@ -274,14 +268,15 @@ class Model:
         
         explainer = shap.TreeExplainer(model, self.X_train_scaled)
 
-        shap_values = explainer(self.X_test_scaled)
+        shap_values = explainer(self.X_test_scaled, check_additivity=False)
+        # print("RF VALUES \n", shap_values)
 
-        print("Shape of shap_values:", shap_values.shape)
-        print("Shape of X_test:", self.X_test_scaled.shape)
+        # print("Shape of shap_values:", shap_values.shape)
+        # print("Shape of X_test:", self.X_test_scaled.shape)
 
-        shap_values_array = shap_values.values 
+        # shap_values_array = shap_values.values 
 
-        print("Shape of shap_values_array:", shap_values_array[0].shape)
+        # print("Shape of shap_values_array:", shap_values_array[0].shape)
 
         shap_values_list = []
         shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
@@ -289,72 +284,36 @@ class Model:
         os.path.join("../../results/SHAP", "RF_SHAP_Spionidae.png")
         )
         plt.close()
+
         
-        # shap.dependence_plot("Totalorganiccontent", shap_values_array[:,:,0], self.X_test, interaction_index="Zn")
-        # shap_values_list = [[] for _ in range(7)]  # Assuming 7 outputs, one list for each output
 
-        # for i, est in enumerate(model.estimators_):
-        #     print(f"Explaining output {i + 1}")
-            
-        #     # Create SHAP explainer using TreeExplainer for tree-based models
-        #     explainer = shap.TreeExplainer(est)
-            
-        #     # Compute SHAP values for the test data
-        #     shap_values = explainer.shap_values(self.X_test_scaled)
-        #     print("num outputs: ", self.y_test_scaled.shape[1])
-        #     # Append SHAP values to the list
-        #     shap_values_list.append(shap_values[i])
-        #     if self.y_test_scaled.shape[1] > 1:
-        #         column_name = self.y_test_scaled.columns[i]
-        #     else:
-        #         column_name = self.y_test_scaled.columns[0]
-        #     file_name = "RF_SHAP_" + column_name
-        #     # Optionally, plot the summary for each output
-        #     shap.summary_plot(shap_values, self.X_test_scaled, show=False, feature_names=self.X_train_scaled.columns)
-        #     plt.title(f'SHAP Summary Plot for Output {self.y_test_scaled.columns[i]}')
-        #     # plt.show()
-        #     plt.savefig(
-        #     os.path.join("../../results/SHAP", file_name)
-        #     )
-        #     plt.close()
+        # Calculate mean absolute SHAP values for each feature
+        
+        
+        self._remake_data(shap_values, 5)
 
-        # # Loop over each estimator in the RandomForest model
-        # for est in model.estimators_:
-        #     # Create SHAP explainer using TreeExplainer for tree-based models
-        #     explainer = shap.TreeExplainer(est)
+        model = RandomForestRegressor(max_depth= None, max_features= 'log2', min_samples_leaf= 4, min_samples_split= 10, n_estimators= 100, random_state=42)
+        model.fit(self.X_train_scaled, self.y_train_scaled)
+        y_pred = model.predict(self.X_test_scaled)
+        
+        # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
 
-        #     # Compute SHAP values for the test data (for all outputs)
-        #     shap_values = explainer.shap_values(self.X_test)  # returns a list of SHAP values, one for each output
+        # print("Best parameters found: ", grid_search.best_params_)
+        # print("Best score: ", grid_search.best_score_)
 
-        #     # Append SHAP values for each output to the corresponding list
-        #     for output_idx in range(7):  # Assuming 7 outputs
-        #         shap_values_list[output_idx].append(shap_values[output_idx])
+        # y_pred = grid_search.best_estimator_.predict(self.X_test_scaled)
 
-        # # Now, for each output, we need to average or sum the SHAP values across all estimators
-        # mean_shap_values_list = []
-
-        # for output_idx in range(7):  # Loop over the outputs
-        #     # Average SHAP values across all estimators for the current output
-        #     mean_shap_values = sum(shap_values_list[output_idx]) / len(model.estimators_)
-        #     mean_shap_values_list.append(mean_shap_values)
-
-        #     # Debugging step: Print the shapes of mean_shap_values and X_test
-        #     print(f"Output {output_idx + 1} - mean_shap_values shape: {mean_shap_values.shape}")
-        #     print(f"X_test shape: {self.X_test.shape}")
-
-        #     # Check if the shapes match
-        #     assert mean_shap_values.shape[0] == self.X_test.shape[0], "Mismatch in the number of samples!"
-        #     assert mean_shap_values.shape[1] == self.X_test.shape[1], "Mismatch in the number of features!"
-
-        #     # Plot SHAP summary for the current output
-        #     file_name = f"RF_SHAP_Output_{output_idx + 1}.png"
-            
-        #     shap.summary_plot(mean_shap_values, self.X_test, feature_names=self.X_train.columns, show=False)
-        #     plt.title(f'SHAP Summary Plot for Output {output_idx + 1}')
-        #     plt.savefig(os.path.join("../../results/SHAP", file_name))
-        #     plt.close()  
+        mse = mean_squared_error(self.y_test_scaled, y_pred)
+        rmse = np.sqrt(mse)
+        mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        r2 = r2_score(self.y_test_scaled, y_pred)
 
 
+        print("\n Random Forest regressor")
+        print(f"Mean Absolute Error (MAE): {mae:.3f}")
+        print(f"Mean Squared Error (MSE): {mse:.3f}")
+        print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
+        print(f"R-squared (R2): {r2:.3f}")
 
     def GBoostRegressor(self):
                 
@@ -449,8 +408,54 @@ class Model:
         print(f"Mean Squared Error (MSE): {mse:.3f}")
         print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
         print(f"R-squared (R2): {r2:.3f}")
+
+        # explainer = shap.KernelExplainer(model.predict, self.X_train_scaled)
+
+        # shap_values = explainer(self.X_test_scaled)
+
+        # self._remake_data(shap_values, 20)
+        
+        # model = MLPRegressor(random_state=42, activation='relu', alpha=0.0001, hidden_layer_sizes=(100, 50), learning_rate='constant', solver='adam')
+
+        # model.fit(self.X_train_scaled, self.y_train_scaled)
+
+        # y_pred = model.predict(self.X_test_scaled)
+
+        # mse = mean_squared_error(self.y_test_scaled, y_pred)
+        # rmse = np.sqrt(mse)
+        # mae = mean_absolute_error(self.y_test_scaled, y_pred)
+        # r2 = r2_score(self.y_test_scaled, y_pred)
+
+        # print("\n MLP regression")
+        # print(f'Mean Squared Error: {mae:.2f}')
+        # print(f"Mean Squared Error (MSE): {mse:.3f}")
+        # print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
+        # print(f"R-squared (R2): {r2:.3f}")
         
         # print("Best parameters:", grid_search.best_params_)
 
-    
+    def _remake_data(self, shap_values, num_values):
 
+        shap_df = pd.DataFrame(shap_values.values, columns=self.X_test_scaled.columns)
+
+        feature_importance = shap_df.abs().mean().sort_values(ascending=False)
+        ranked_features = feature_importance.reset_index()
+        ranked_features.columns = ['Feature', 'Mean Absolute SHAP Value']
+        ranked_features['Rank'] = ranked_features['Mean Absolute SHAP Value'].rank(ascending=False)
+        print("Ranked Features DataFrame:\n", ranked_features)
+
+        # print(ranked_features)
+
+        top_features = ranked_features['Feature'].head(num_values).tolist()
+        self.X_train_scaled = self.X_train_scaled[top_features]
+        # self.y_train_scaled = self.y_train_scaled.values.ravel()
+        self.X_test_scaled = self.X_test_scaled[top_features]
+        # self.y_test_scaled = self.y_test_scaled.values.ravel()
+        
+        # self.X_train_scaled = self._concatDF(self.X_train_scaled, self.X_train_locations)
+        # self.X_test_scaled = self._concatDF(self.X_test_scaled, self.X_test_locations)
+        print(self.X_train_scaled)
+        
+
+    def _concatDF(self, df1, df2):
+        return pd.concat([df1,df2], axis=1)

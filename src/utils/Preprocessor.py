@@ -36,6 +36,7 @@ class Preprocessor():
         df_cleaned = df_cleaned.dropna(axis=1, how='all')
         df_cleaned = df_cleaned.dropna(subset=['S'])
         df_cleaned = df_cleaned.drop(columns="J'")
+        df_cleaned = df_cleaned.dropna()
         
         self.benthicMacrofauna.columns = pd.MultiIndex.from_tuples(
         [(str(col[0]).replace(' ', ''), str(col[1]).replace(' ', '')) for col in self.benthicMacrofauna.columns]
@@ -48,7 +49,7 @@ class Preprocessor():
         atlanticPorts = df_cleaned[df_cleaned['Port'].isin(selected_ports)]
         indianPorts = df_cleaned[~df_cleaned['Port'].isin(selected_ports)]
 
-        sediment_fauna, fauna = self._add_benthic_macrofauna(df_cleaned, self.benthicMacrofauna, "Spionidae")
+        sediment_fauna, fauna = self._add_benthic_macrofauna(df_cleaned, self.benthicMacrofauna, "Nephtyidae")
         sediment_fauna = self._replace_less_than(sediment_fauna)
         # print("Spionidae: \n", spionidae.head())
         
@@ -164,11 +165,13 @@ class Preprocessor():
         gdf.set_crs(epsg=4326, inplace=True)
 
 
-
-        new_fauna = pd.DataFrame(new["Spionidae"])
+        new = new.dropna()
+        new_fauna = pd.DataFrame(new[fauna])
+        # new = new.drop(columns=["Location", "Latitude", "Longitude", "Year","Station(Newnumber)"])
         new = new.drop(columns=["Location", "Latitude", "Longitude", "Year","Station(Newnumber)", "Gravel","Verycoarsegrainedsand","Coarsegrainedsand","Mediumgrainedsand","Finegrainedsand","Veryfinegrainedsand","Mud","Meanphi","Meanmm","Medianphi","Medianmm","Sorting","Skewness"])
-        new_df = new.loc[:, "Port":"Zn"]
-        new = new.loc[:, "Totalorganiccontent":"Zn"]
+
+        new_df = new.loc[:, "Port":"Zn"]#"#metalsenriched"]
+        new = new.loc[:, "Totalorganiccontent":"#metalsenriched"]
         
         
         encoder = OneHotEncoder(sparse_output=False)
@@ -182,11 +185,11 @@ class Preprocessor():
         encoded_df_reset = encoded_df.reset_index(drop=True)
 
         df_encoded = pd.concat([df_cleaned.drop(columns=['Port']), encoded_df_reset], axis=1)  
-        print(df_encoded.head())               
+        print(df_encoded.tail())               
 
         # df_encoded = self._replace_less_than(df_encoded)
         
-        return new, new_fauna
+        return df_encoded, new_fauna
 
     def _replace_less_than(self, df):
         df = df.replace(r"<.*", 0, regex=True)
@@ -199,8 +202,8 @@ class Preprocessor():
             
             # Split the DataFrame into two parts
             df1_temp = df.iloc[:, :index_s]  # All columns up to "S"
-            df2 = df.iloc[:, index_s :]  # All columns from "S" onwards
-            df1 = df1_temp.loc[:, "Totalorganiccontent":"Zn"]
+            df2 = pd.DataFrame(df["S"])#.iloc[:, index_s :]  # All columns from "S" onwards
+            df1 = df1_temp.loc[:, "Sand":"SQILowerlimit"]
             df1 = df1.replace(r"<.*", 0, regex=True)
             df1 = df1.apply(pd.to_numeric, errors="coerce")
 

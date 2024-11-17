@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import geopandas as gpd
-import geodatasets
+# import geodatasets
 import matplotlib.pyplot as plt
 import folium
 from folium import Choropleth, CircleMarker
@@ -17,29 +17,7 @@ class Mapper:
         self.data = pd.read_csv("../../data/preprocessed/fauna.csv",
                 sep=",",
                 encoding="utf-8")
-        
-    
 
-
-    def _dms_to_decimal(self, dms):
-        """Convert DMS to decimal degrees."""
-        dms = dms.replace('"', '').strip()
-        # print("DMS: ", dms)  # Remove double quotes and trim spaces
-        direction = dms[-1:]
-        # print("Direction: ",direction)
-        degrees, minutes_seconds = dms[:-1].split("°")
-        # print("Minutes & Seconds: ", minutes_seconds)
-        minutes, seconds = minutes_seconds.split("'")
-        # seconds = seconds_direction[:-1]
-        # direction = seconds_direction[-1]
-
-        decimal = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
-        
-        # Adjust for southern or western hemispheres
-        if direction in ['S', 'W']:
-            decimal *= -1
-        # print(decimal)
-        return decimal
     
     def _get_color(self, spionidae_count):
             """Return a color based on the global variance of the Spionidae count."""
