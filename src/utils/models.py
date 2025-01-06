@@ -115,38 +115,36 @@ class Model:
 
         
 
-        # model = LinearRegression()
-        # self.y_train_scaled = self.y_train_scaled['S']
-        # self.y_test_scaled = self.y_test_scaled['S']
+        model = LinearRegression()
         
-        # model.fit(self.X_train_scaled, self.y_train_scaled)
-        # y_pred = model.predict(self.X_test_scaled)
+        model.fit(self.X_train_scaled, self.y_train_scaled)
+        y_pred = model.predict(self.X_test_scaled)
         
 
-        # param_grid = {
-        #     'alpha_1': [1e-6, 1e-5, 1e-4],
-        #     'alpha_2': [1e-6, 1e-5, 1e-4],
-        #     'lambda_1': [1e-6, 1e-5, 1e-4],
-        #     'lambda_2': [1e-6, 1e-5, 1e-4]
-        # }
+        param_grid = {
+            'alpha_1': [1e-6, 1e-5, 1e-4],
+            'alpha_2': [1e-6, 1e-5, 1e-4],
+            'lambda_1': [1e-6, 1e-5, 1e-4],
+            'lambda_2': [1e-6, 1e-5, 1e-4]
+        }
 
-        # bayes = BayesianRidge()
-        # bayes.fit(self.X_train_scaled, self.y_train_scaled)
-        # y_pred = bayes.predict(self.X_test_scaled)
+        bayes = BayesianRidge()
+        bayes.fit(self.X_train_scaled, self.y_train_scaled)
+        y_pred = bayes.predict(self.X_test_scaled)
 
-        # cv = KFold(n_splits=5, shuffle=True, random_state=42)
+        cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
-        # grid_search = GridSearchCV(bayes, param_grid, cv=cv, scoring='neg_mean_squared_error')
+        grid_search = GridSearchCV(bayes, param_grid, cv=cv, scoring='neg_mean_squared_error')
 
-        # # Fit the grid search
-        # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
+        # Fit the grid search
+        grid_search.fit(self.X_train_scaled, self.y_train_scaled)
 
-        # # Get the best estimator and parameters
-        # best_bayes = grid_search.best_estimator_
-        # best_params = grid_search.best_params_
+        # Get the best estimator and parameters
+        best_bayes = grid_search.best_estimator_
+        best_params = grid_search.best_params_
 
-        # print("Best Parameters:", best_params)
-        # y_pred = best_bayes.predict(self.X_test_scaled)
+        print("Best Parameters:", best_params)
+        y_pred = best_bayes.predict(self.X_test_scaled)
 
         mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
@@ -182,7 +180,7 @@ class Model:
         )
         plt.close()
 
-        self._remake_data(shap_values, 10)
+        # self._remake_data(shap_values, 10)
 
         grid_search.fit(self.X_train_scaled, self.y_train_scaled)
 
@@ -247,12 +245,12 @@ class Model:
             verbose=0
         )
 
-        # grid_search.fit(self.X_train_scaled, self.y_train_scaled)
+        grid_search.fit(self.X_train_scaled, self.y_train_scaled)
 
-        # print("Best parameters found: ", grid_search.best_params_)
-        # print("Best score: ", grid_search.best_score_)
+        print("Best parameters found: ", grid_search.best_params_)
+        print("Best score: ", grid_search.best_score_)
 
-        # y_pred = grid_search.best_estimator_.predict(self.X_test_scaled)
+        y_pred = grid_search.best_estimator_.predict(self.X_test_scaled)
 
         mse = mean_squared_error(self.y_test_scaled, y_pred)
         rmse = np.sqrt(mse)
@@ -290,7 +288,7 @@ class Model:
         # Calculate mean absolute SHAP values for each feature
         
         
-        self._remake_data(shap_values, 5)
+        # self._remake_data(shap_values, 5)
 
         model = RandomForestRegressor(max_depth= None, max_features= 'log2', min_samples_leaf= 4, min_samples_split= 10, n_estimators= 100, random_state=42)
         model.fit(self.X_train_scaled, self.y_train_scaled)

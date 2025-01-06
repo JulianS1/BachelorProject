@@ -1,10 +1,12 @@
 import os
+import numpy as np
 import re
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
-from scipy.stats import chi2_contingency
+from scipy.stats import chi2_contingency, gamma, beta, norm, weibull_min
+
 
 
 class Visualisation:
@@ -55,6 +57,40 @@ class Visualisation:
         self.indianMacrofauna = pd.read_csv("../../data/partPreprocessed/indianMacrofaunaData.csv",
                 sep=",",
                 encoding="utf-8")
+        
+    def data_plotting(self):
+
+        for column in self.y_train:
+            plt.hist(self.y_train[column], bins=300, color='skyblue', edgecolor='black')
+            plt.xticks(rotation=90)
+            plt.title(column)
+            manager = plt.get_current_fig_manager()
+            manager.full_screen_toggle()
+
+            ser = self.y_train[column]
+
+            xt = plt.xticks()[0]  
+            xmin, xmax = min(xt), max(xt)  
+            lnspc = np.linspace(xmin, xmax, len(ser))
+
+            m, s = norm.fit(ser) 
+            pdf_g = norm.pdf(lnspc, m, s)
+            plt.plot(lnspc, pdf_g, label="Norm")
+
+            ag,bg,cg = gamma.fit(ser)  
+            pdf_gamma = gamma.pdf(lnspc, ag, bg,cg)  
+            plt.plot(lnspc, pdf_gamma, label="Gamma")
+
+            ab,bb,cb,db = beta.fit(ser)  
+            pdf_beta = beta.pdf(lnspc, ab, bb,cb, db)  
+            plt.plot(lnspc, pdf_beta, label="Beta")
+
+            # shape, loc, scale = weibull_min.fit(self.X_train)
+            # pdf_weibull = weibull_min.pdf(lnspc, shape, loc=loc, scale=scale)
+            # plt.plot(lnspc, pdf_weibull, label="Weibull")
+
+            plt.legend(loc='best', frameon=False)
+            plt.show()
 
     def correlationAnalysis(self):
 
@@ -93,7 +129,7 @@ class Visualisation:
             os.path.join("../../results", file_name)
         )
 
-
+    
 
 
 
@@ -133,6 +169,24 @@ class Visualisation:
         )
         # plt.show()
 
+    def faunacorrelation(self):
+        faunaData = self.fauna.drop(columns=["Station", "Port","Location", "Latitude", "Longitude", "Year","Station(Newnumber)","Verycoarsegrainedsand","Coarsegrainedsand","Mediumgrainedsand","Finegrainedsand","Veryfinegrainedsand","Meanphi","Meanmm","Medianphi","Medianmm","Sorting","Skewness","Al","Fe","As","Ba","Be","Cd","Co","Cu","Cr","Mn","Hg","Ni","Pb","V","Zn"])
+        faunaData = faunaData.loc[:, "Gravel":"BAPTEQ"]
+        faunaData = faunaData.replace(r'<.*', 0, regex=True)
+        print(faunaData)
+        corrmatrix = faunaData.corr()
+        plt.figure(figsize=(300, 300))
+        sns.heatmap(corrmatrix, annot=True, cmap="coolwarm")
+        plt.title("Correlation Matrix of Nephtyidae and predictor variables")
+
+        # save the correlation matrix plot
+        file_name = "Nephtyidae_correlation_matrix.png"
+        plt.tight_layout()
+        
+        plt.savefig(
+            os.path.join("../../results", file_name)
+        )
+    
     def _compare_harbours(self):
         self.fauna["residual"] = m1.u
         # Obtain the median value of residuals in each neighborhood

@@ -20,8 +20,8 @@ SAVE_RESULTS_PATH = "../../results/"
 
 
 DO_PREPROCESSING = False
-DO_VISULAIZATION = False
-DO_MODELS = True
+DO_VISULAIZATION = True
+DO_MODELS = False
 DO_BAYES = False
 DO_MAP = False
 DO_TESTING = False
@@ -38,7 +38,9 @@ if __name__ == "__main__":
         visualisor = Visualisation(savePath= SAVE_RESULTS_PATH)
         # visualisor.correlationAnalysis()
         # visualisor._compare_harbours()
-        visualisor._cluster_analysis()
+        # visualisor._cluster_analysis()
+        # visualisor.data_plotting()
+        visualisor.faunacorrelation()
     
     else:
         print("Skipped visualisation")
@@ -55,6 +57,11 @@ if __name__ == "__main__":
 
     if DO_BAYES == True:
         model = Bayes()
+        model.bayes()
+        # model.informed_Bayes()
+        # model.informed_bayes_separate()
+        # model.informed_bayes_gamma()
+        # model.zip_Bayes()
 
     else:
         print("Skipped bayes")

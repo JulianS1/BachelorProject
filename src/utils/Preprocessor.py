@@ -49,7 +49,7 @@ class Preprocessor():
         atlanticPorts = df_cleaned[df_cleaned['Port'].isin(selected_ports)]
         indianPorts = df_cleaned[~df_cleaned['Port'].isin(selected_ports)]
 
-        sediment_fauna, fauna = self._add_benthic_macrofauna(df_cleaned, self.benthicMacrofauna, "Nephtyidae")
+        sediment_fauna, fauna = self._add_benthic_macrofauna(df_cleaned, self.benthicMacrofauna, "Spionidae")
         sediment_fauna = self._replace_less_than(sediment_fauna)
         # print("Spionidae: \n", spionidae.head())
         
@@ -143,6 +143,11 @@ class Preprocessor():
         
         new["Year"] = new["Year"].astype(float)
         new["Station"] = new["Station"].str.replace(r"^DBN(\d+)$", r"DB\1", regex=True)
+        new["Station"] = new["Station"].str.replace(r"^C(\d+)$", r"NQ\1", regex=True)
+        new["Location"] = new["Location"].str.replace(r"^Coega(\d+)$", r"Ngqura\1", regex=True)
+        new = new[new["Station"]!="NQ5"]
+        new = new[new["Station"]!="NQ3"]
+
         new = pd.merge(new, df, how="inner", left_on=["Year", "Station"], right_on=["Year", "Station(Newnumber)"])
         new[fauna] = new[fauna].fillna(value=0.0)
         # new = new[new['Spionidae'] >= 100]
@@ -168,17 +173,17 @@ class Preprocessor():
         new = new.dropna()
         new_fauna = pd.DataFrame(new[fauna])
         # new = new.drop(columns=["Location", "Latitude", "Longitude", "Year","Station(Newnumber)"])
-        new = new.drop(columns=["Location", "Latitude", "Longitude", "Year","Station(Newnumber)", "Gravel","Verycoarsegrainedsand","Coarsegrainedsand","Mediumgrainedsand","Finegrainedsand","Veryfinegrainedsand","Mud","Meanphi","Meanmm","Medianphi","Medianmm","Sorting","Skewness"])
+        new = new.drop(columns=["Location", "Latitude", "Longitude", "Year","Station(Newnumber)","Verycoarsegrainedsand","Coarsegrainedsand","Mediumgrainedsand","Finegrainedsand","Veryfinegrainedsand","Meanphi","Meanmm","Medianphi","Medianmm","Sorting","Skewness","Al","Fe","As","Ba","Be","Cd","Co","Cu","Cr","Mn","Hg","Ni","Pb","V","Zn"])
 
-        new_df = new.loc[:, "Port":"Zn"]#"#metalsenriched"]
-        new = new.loc[:, "Totalorganiccontent":"#metalsenriched"]
+        new_df = new.loc[:, "Port":"Zn.1"]#"#metalsenriched"]
+        new = new.loc[:, "Gravel":"BAPTEQ"]
         
         
         encoder = OneHotEncoder(sparse_output=False)
 
         encoded_ports = encoder.fit_transform(new_df[['Port']])
 
-        df_cleaned = new_df.dropna(subset=['Zn']).reset_index(drop=True)
+        df_cleaned = new_df.dropna(subset=['Zn.1']).reset_index(drop=True)
         # print(encoded_ports)
 
         encoded_df = pd.DataFrame(encoded_ports, columns=encoder.get_feature_names_out(['Port']))
@@ -188,8 +193,8 @@ class Preprocessor():
         print(df_encoded.tail())               
 
         # df_encoded = self._replace_less_than(df_encoded)
-        
-        return df_encoded, new_fauna
+        return new, new_fauna
+        # return df_encoded, new_fauna
 
     def _replace_less_than(self, df):
         df = df.replace(r"<.*", 0, regex=True)
@@ -225,7 +230,7 @@ class Preprocessor():
         return df1, df2
     
     def _trainTestSplit(self, X, y):
-        return train_test_split(X, y, test_size=0.2, random_state=42)
+        return train_test_split(X, y, test_size=0.2, random_state=42, shuffle=False)
     
     def _normalise(self, X_train, X_test, y_train, y_test):
 
