@@ -171,16 +171,16 @@ class Visualisation:
 
     def faunacorrelation(self):
         faunaData = self.fauna.drop(columns=["Station", "Port","Location", "Latitude", "Longitude", "Year","Station(Newnumber)","Verycoarsegrainedsand","Coarsegrainedsand","Mediumgrainedsand","Finegrainedsand","Veryfinegrainedsand","Meanphi","Meanmm","Medianphi","Medianmm","Sorting","Skewness","Al","Fe","As","Ba","Be","Cd","Co","Cu","Cr","Mn","Hg","Ni","Pb","V","Zn"])
-        faunaData = faunaData.loc[:, "Gravel":"BAPTEQ"]
+        faunaData = faunaData.loc[:, "Spionidae":"BAPTEQ"]
         faunaData = faunaData.replace(r'<.*', 0, regex=True)
         print(faunaData)
         corrmatrix = faunaData.corr()
-        plt.figure(figsize=(300, 300))
+        plt.figure(figsize=(150, 150))
         sns.heatmap(corrmatrix, annot=True, cmap="coolwarm")
-        plt.title("Correlation Matrix of Nephtyidae and predictor variables")
+        plt.title("Correlation Matrix of Spionidae and predictor variables")
 
         # save the correlation matrix plot
-        file_name = "Nephtyidae_correlation_matrix.png"
+        file_name = "Spionidae_correlation_matrix.png"
         plt.tight_layout()
         
         plt.savefig(

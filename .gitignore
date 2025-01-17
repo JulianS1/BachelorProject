@@ -5,3 +5,4 @@ __pycache__
 rawData/
 preprocessed/
 partPreprocessed/
+results/

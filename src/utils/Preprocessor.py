@@ -49,7 +49,7 @@ class Preprocessor():
         atlanticPorts = df_cleaned[df_cleaned['Port'].isin(selected_ports)]
         indianPorts = df_cleaned[~df_cleaned['Port'].isin(selected_ports)]
 
-        sediment_fauna, fauna = self._add_benthic_macrofauna(df_cleaned, self.benthicMacrofauna, "Spionidae")
+        sediment_fauna, fauna = self._add_benthic_macrofauna(df_cleaned, self.benthicMacrofauna, "Nephtyidae")
         sediment_fauna = self._replace_less_than(sediment_fauna)
         # print("Spionidae: \n", spionidae.head())
         
