@@ -3,11 +3,11 @@
 # ***Read***
 
 The required libraries are:
-    - brms
-    - bartmachine
-    - BayesPlot
-    - ggplot2
-    - ICEbox
+    - brms 2.22.0
+    - bartmachine 1.3.4.1
+    - bayesplot 1.11.1
+    - ggplot2 3.5.1
+    - ICEbox 1.1.5
 
 To run:
 
