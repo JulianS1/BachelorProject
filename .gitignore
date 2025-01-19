@@ -6,3 +6,5 @@ rawData/
 preprocessed/
 partPreprocessed/
 results/
+results/SHAP
+results/maps
