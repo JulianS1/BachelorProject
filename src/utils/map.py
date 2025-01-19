@@ -19,16 +19,16 @@ class Mapper:
                 encoding="utf-8")
 
     
-    def _get_color(self, spionidae_count):
-            """Return a color based on the global variance of the Spionidae count."""
-            # print(spionidae_count)
-            if spionidae_count < self.spionidae_mean - self.spionidae_std:
+    def _get_color(self, Nephtyidae_count):
+            """Return a color based on the global variance of the Nephtyidae count."""
+            # print(Nephtyidae_count)
+            if Nephtyidae_count < self.Nephtyidae_mean - self.Nephtyidae_std:
                 # print("red")
                 return 'red'  # Low values
-            elif self.spionidae_mean - self.spionidae_std <= spionidae_count < self.spionidae_mean:
+            elif self.Nephtyidae_mean - self.Nephtyidae_std <= Nephtyidae_count < self.Nephtyidae_mean:
                 # print("orange")
                 return 'orange'  # Below average
-            elif self.spionidae_mean <= spionidae_count < self.spionidae_mean + self.spionidae_std:
+            elif self.Nephtyidae_mean <= Nephtyidae_count < self.Nephtyidae_mean + self.Nephtyidae_std:
                 # print("yellow")
                 return 'lightgreen'  # Above average
             else:
@@ -53,17 +53,17 @@ class Mapper:
             'Longitude': 'mean',
             'Location': 'first',
             'SQILowerlimit': 'mean',
-            'Spionidae': 'mean',  # Similar for Spionidae
+            'Nephtyidae': 'mean',  # Similar for Nephtyidae
             'Port': 'first'  # Take the first port as an example
         }).reset_index()
-        self.spionidae_mean = average_locations['Spionidae'].mean()
-        self.spionidae_std = average_locations['Spionidae'].std() / 2
+        self.Nephtyidae_mean = average_locations['Nephtyidae'].mean()
+        self.Nephtyidae_std = average_locations['Nephtyidae'].std() / 2
 
         print(average_locations)
         
 
         for _, row in average_locations.iterrows():
-            marker_color = self._get_color(row['Spionidae'])
+            marker_color = self._get_color(row['Nephtyidae'])
             folium.Marker(
                 location=[row['Latitude'], row['Longitude']],
                 popup=folium.Popup(f"""
@@ -72,12 +72,12 @@ class Mapper:
                     Average Longitude: {row['Longitude']}\n
                     Location: {row['Location']}\n
                     Average SQI: {row['SQILowerlimit']}\n
-                    Average Spionidae: {row['Spionidae']}\n
+                    Average Nephtyidae: {row['Nephtyidae']}\n
                     Port: {row['Port']}
                 """, parse_html=True),
                 icon=folium.Icon(color=marker_color, icon='info-sign')
             ).add_to(m)
-        heat_data = [[row['Latitude'], row['Longitude'], row['Spionidae']] for index, row in self.data.iterrows()]
+        heat_data = [[row['Latitude'], row['Longitude'], row['Nephtyidae']] for index, row in self.data.iterrows()]
 
         # Add HeatMap to the map
         HeatMap(heat_data, radius=15, max_zoom=13).add_to(m)

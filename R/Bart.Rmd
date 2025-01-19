@@ -1,0 +1,370 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+options(java.parameters = "-Xmx5g")
+library(bartMachine)
+library(ICEbox)
+```
+
+
+
+```{r}
+X_train <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Nephtyidae/X_train_fauna_Unscaled.csv")
+y_train <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Nephtyidae/y_train_fauna_Unscaled.csv")
+X_test <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Nephtyidae/X_test_fauna_Unscaled.csv")
+y_test <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Nephtyidae/y_test_fauna_Unscaled.csv")
+# X_train <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Spionidae/X_train_fauna_Unscaled.csv")
+# y_train <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Spionidae/y_train_fauna_Unscaled.csv")
+# X_test <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Spionidae/X_test_fauna_Unscaled.csv")
+# y_test <- read.csv("/home/julian/Documents/BachelorProject/Bayes_test/Spionidae/y_test_fauna_Unscaled.csv")
+#X_test <- X_test[, c("Gravel", "Mud", "Totalorganiccontent", "Sand", "Fe.1", "As.1", 
+#                        "Ba.1", "Be.1", "Cd.1", "Co.1", "Cu.1", "Cr.1", "Mn.1", "Hg.1", 
+#                        "Ni.1", "Pb.1", "V.1", "Zn.1")]
+#X_train <- rbind(X_train, X_test)
+#y_train <- rbind(y_train, y_test)
+data <- cbind(X_train, (y_train)[1])
+#data <- data[, c("Gravel", "Mud", "Totalorganiccontent", "Sand", "Fe.1", "As.1", 
+#                        "Ba.1", "Be.1", "Cd.1", "Co.1", "Cu.1", "Cr.1", "Mn.1", "Hg.1", 
+#                        "Ni.1", "Pb.1", "V.1", "Zn.1", "Nephtyidae")]
+data
+```
+
+
+
+```{r}
+bart_machine_cv <- bartMachineCV(X_train, y_train$Nephtyidae, num_burn = c(100,250,500,1000), num_post= c(100,250,500,1000))
+bart_machine_cv$var_importance
+```
+```{r}
+bart_machine_cv
+```
+```{r}
+investigate_var_importance(bart_machine_cv)
+```
+```{r}
+test_predictions <- predict(bart_machine_cv, X_test)
+# Ensure the training data columns match X_train columns
+
+test_pred_mean <- test_predictions
+#test_pred_mean[test_pred_mean < 0] <- 0
+rmse <- sqrt(mean((y_test$Nephtyidae - test_pred_mean)^2))
+cat("RMSE:", rmse, "\n")
+mae <- mean(abs(y_test$Nephtyidae - test_pred_mean))
+cat("MAE:", mae, "\n")
+ss_total <- sum((y_test$Nephtyidae - mean(y_test$Nephtyidae))^2)
+ss_residual <- sum((y_test$Nephtyidae - test_pred_mean)^2)
+r_squared <- 1 - (ss_residual / ss_total)
+cat("R^2:", r_squared, "\n")
+```
+
+
+```{r}
+plot_y_vs_yhat(bart_model, credible_intervals = TRUE)
+plot_y_vs_yhat(bart_model, prediction_intervals = TRUE)
+```
+
+
+```{r}
+nrow(data)  # Should return a positive number
+ncol(data)
+sapply(data, class)
+# Check for missing values
+sum(is.na(data))
+apply(data, 2, var)
+if (nrow(data) > 0 && ncol(data) > 0) {
+  # Check if there are any non-numeric columns
+  column_classes <- sapply(data, class)
+  print(column_classes)
+
+  # Remove non-numeric columns or convert them
+  data_numeric <- data[, sapply(data, is.numeric)]
+
+  # Check for NA values
+  sum(is.na(data_numeric))  # If any, handle them (remove or impute)
+
+  # Calculate the variance of each numeric column
+  column_variances <- apply(data_numeric, 2, var)
+  print(column_variances)
+} else {
+  print("The data frame is empty or has no valid rows/columns.")
+}
+```
+
+
+```{r}
+data$zero_flag <- as.integer(data$Nephtyidae == 0.0)
+
+# Separate the data into two parts:
+# 1. Binary model: Predict if the target is zero
+# 2. Regression model: Predict the target value when it's non-zero
+model <- lm(zero_flag ~ ., data = data)
+# Binary model to predict zero vs non-zero
+binary_data <- data[data$zero_flag %in% c(0, 1), ]
+binary_model <- bartMachine(
+  data[, colnames(data) != "Nephtyidae" & colnames(data) != "zero_flag"],
+  data[, "zero_flag"],
+  seed = 42,
+  num_trees = 50,
+  num_burn_in = 250,
+  num_iterations_after_burn_in = 1000,
+  mh_prob_steps = c(2.5, 2.5, 4)/9,
+)
+binary_model
+# Regression model for predicting the value of Nephtyidae when it's non-zero
+regression_model <- bartMachine(
+  binary_data[, colnames(data) != "Nephtyidae" & colnames(data) != "zero_flag"],
+  binary_data$Nephtyidae,
+  seed = 42,
+  num_trees = 80,
+  num_burn_in = 250,
+  num_iterations_after_burn_in = 1000,
+  mh_prob_steps = c(2.5, 2.5, 4)/9,
+  mem_cache_for_speed = FALSE
+)
+
+# Now make predictions for both models
+
+# Predict the probability of zero (binary model)
+binary_pred <- predict(binary_model, new_data = data[, colnames(data) != "Nephtyidae" & colnames(data) != "zero_flag"])
+predictions_binary <- ifelse(binary_pred > 0.5, 1, 0)
+# Predict the actual target values (regression model)
+regression_pred <- predict(regression_model, new_data = data[, colnames(data) != "Nephtyidae" & colnames(data) != "zero_flag"])
+
+# Combine the predictions
+# If the binary model predicts zero, we assign the target as 0, else we use the regression prediction
+final_predictions <- ifelse(predictions_binary == 1, 0, regression_pred)
+final_predictions
+# Evaluation (e.g., RMSE or R-squared)
+rmse <- sqrt(mean((final_predictions - data$Nephtyidae)^2))
+print(paste("RMSE:", rmse))
+
+ss_total <- sum((data$Nephtyidae - mean(data$Nephtyidae))^2)
+ss_residual <- sum((data$Nephtyidae - final_predictions)^2)
+r_squared <- 1 - (ss_residual / ss_total)
+print(paste("R-squared:", r_squared))
+```     
+
+
+```{r}
+set.seed(42)
+bart_model <- bartMachine(
+  data[, colnames(data) != "Nephtyidae"],    # Predictor variables
+  data[,"Nephtyidae"],
+  seed = 42,
+  num_trees = 250,
+  num_burn_in = 100,
+  num_iterations_after_burn_in = 1000,
+  mh_prob_steps = c(2.5, 50, 4)/9,
+  mem_cache_for_speed = TRUE,
+ # alpha = 1,
+ # beta = 5
+       # Number of trees in the ensemble (default: 200)
+)
+bart_model
+```
+
+```{r}
+ice_obj = ice(bart_model,  data[, colnames(data) != "Nephtyidae"], predictor="Cu.1")
+#just the PDP
+# plot(ice_obj, plot_pdp = TRUE, colorvec = rep("white", nrow(data[, colnames(data) != "Nephtyidae"])), plot_orig_pts_preds = FALSE, centered = TRUE)
+#the whole ICE
+# plot(ice_obj, centered=TRUE)
+
+plot(ice_temp, plot_pdp=FALSE, plot_orig_pts_preds = FALSE, x_quantile=FALSE, xlab = "Ba.1", ylab = "Predicted Response", centered_percentile = 0.000000000000001, centered = TRUE, xlim = c(0, 6), ylim = c(0, 4.5))
+```
+
+
+
+
+```{r}
+cv_results <- k_fold_cv(       # Fitted BARTMachine model
+    k_folds = 5,                   # Number of folds
+    X=data[, colnames(data) != "Spionidae"],
+    y=data$Spionidae,
+    num_trees = 250,
+  num_burn_in = 100,
+  num_iterations_after_burn_in = 1000,
+  mh_prob_steps = c(2.5, 50, 4)/9,
+  mem_cache_for_speed = TRUE,
+  seed=42,
+)
+# Print cross-validation results
+print(cv_results)
+```
+
+
+```{r}
+investigate_var_importance(bart_model, bottom_margin=15)
+
+# View variable importance values
+#cov_importance_test(bart_model, covariates = "Zn.1")
+```
+
+```{r}
+#pd_plot(bart_model, j = "Zn.1")
+```
+
+```{r}
+interaction_investigator(bart_model, num_replicates_for_avg = 25, bottom_margin=15)
+```
+
+```{r}
+cov_importance_test(bart_model, covariates = c("Perylene"))#, "Gravel", "Zn.1", "Fe.1", "Cu.1"))
+```
+
+
+
+```{r}
+# dev.new(width = 20, height = 20)
+vs <- var_selection_by_permute(bart_model, num_permute_samples = 10, plot=TRUE)
+```
+```{r}
+dev.new(width = 10, height = 7)  # Open a larger plotting window
+plot(vs)
+vs
+```
+
+
+
+```{r}
+plot_convergence_diagnostics(bart_model)
+
+
+```
+```{r}
+plot_y_vs_yhat(bart_model, credible_intervals = TRUE)
+```
+
+
+```{r}
+plot_y_vs_yhat(bart_model, prediction_intervals = TRUE)
+```
+
+
+```{r}
+#X_test <- X_train
+#y_test <- y_train
+test_predictions <- predict(bart_model, X_test)
+# Ensure the training data columns match X_train columns
+
+test_pred_mean <- test_predictions
+test_pred_mean[test_pred_mean < 0] <- 0
+rmse <- sqrt(mean((y_test$Nephtyidae - test_pred_mean)^2))
+cat("RMSE:", rmse, "\n")
+mae <- mean(abs(y_test$Nephtyidae - test_pred_mean))
+cat("MAE:", mae, "\n")
+ss_total <- sum((y_test$Nephtyidae - mean(y_test$Nephtyidae))^2)
+ss_residual <- sum((y_test$Nephtyidae - test_pred_mean)^2)
+r_squared <- 1 - (ss_residual / ss_total)
+cat("R^2:", r_squared, "\n")
+```
+
+```{r}
+length(test_pred_mean)
+length(y_test$Nephtyidae)
+```
+
+
+
+```{r}
+plot(y_test$Nephtyidae, test_pred_mean,
+     xlab = "Observed Values", ylab = "Predicted Values",
+     main = "Observed vs Predicted",
+     pch = 16, col = "blue")
+abline(0, 1, col = "red", lwd = 2)
+fit <- lm(y_test$Nephtyidae ~ test_pred_mean)
+abline(fit, col = "green", lwd = 2)
+```
+
+```{r}
+model <- wbart(
+  x.train = X_train,    # Predictor variables
+  y.train = y_train$Nephtyidae,      # Target variable
+  nskip = 1000,            # Burn-in iterations
+  ndpost = 2000,           # Number of posterior samples
+  ntree = 100              # Number of trees in the ensemble (default: 200)
+)
+
+# Model summary
+summary(model)
+
+# Make predictions on training data
+predictions <- predict(model, X_train)
+predictions <- apply(predictions, 2, mean)
+
+# Calculate RMSE on the training data
+rmse <- sqrt(mean((y_train - predictions)^2))
+cat("RMSE: ", rmse, "\n")
+
+# Plot predicted vs actual values
+plot(y_train$Nephtyidae,predictions, main = "BART: Predicted vs Actual")
+```
+```{r}
+num_trees_values <- c(50, 100, 200)
+num_burn_values <- c(1000, 2000)
+num_post_values <- c(2000, 3000)
+
+results <- data.frame(num_trees = numeric(), num_burn = numeric(), num_post = numeric(), rmse = numeric())
+
+# Grid search loop
+for (num_trees in num_trees_values) {
+  for (num_burn in num_burn_values) {
+    for (num_post in num_post_values) {
+      
+      # Fit BART model with current parameters
+      model <- bart(
+        x.train = X_train, 
+        y.train = y_train$Nephtyidae, 
+        ntree = num_trees, 
+        nskip = num_burn, 
+        ndpost = num_post,
+        keeptrees = TRUE,              # Keep the trees for prediction
+        k = 2    
+      )
+      
+      # Make predictions and calculate RMSE
+      predictions <- predict(model, X_train)
+      rmse <- sqrt(mean((y_train$Nephtyidae - predictions)^2))
+      
+      # Store results
+      results <- rbind(results, data.frame(num_trees = num_trees, num_burn = num_burn, num_post = num_post, rmse = rmse))
+    }
+  }
+}
+
+# View the results and find the best parameters
+print(results)
+
+# Best parameters based on RMSE
+best_model_params <- results[which.min(results$rmse), ]
+print(best_model_params)
+```
+
+```{r}
+predictions <- predict(bayesian_glm, newdata = X_test, type = "response")
+```
+
+```{r}
+test_pred_mean <- apply(predictions, 2, mean)
+rmse <- sqrt(mean((y_test$Nephtyidae - test_pred_mean)^2))
+cat("RMSE:", rmse, "\n")
+mae <- mean(abs(y_test$Nephtyidae - test_pred_mean))
+cat("MAE:", mae, "\n")
+ss_total <- sum((y_test$Nephtyidae - mean(y_test$Nephtyidae))^2)
+ss_residual <- sum((y_test$Nephtyidae - test_pred_mean)^2)
+r_squared <- 1 - (ss_residual / ss_total)
+cat("R^2:", r_squared, "\n")
+```
+
+```{r}
+plot(y_test$Nephtyidae, test_pred_mean,
+     xlab = "Observed Values", ylab = "Predicted Values",
+     main = "Observed vs Predicted",
+     pch = 16, col = "blue")
+abline(0, 1, col = "red", lwd = 2)
+fit <- lm(y_test$Nephtyidae ~ test_pred_mean)
+abline(fit, col = "green", lwd = 2)

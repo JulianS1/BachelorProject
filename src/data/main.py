@@ -19,12 +19,12 @@ RETRIEVE_DATA_PATH = "../../data/preprocessed"
 SAVE_RESULTS_PATH = "../../results/"
 
 
-DO_PREPROCESSING = True
+DO_PREPROCESSING = False
 DO_VISULAIZATION = False
 DO_MODELS = False
 DO_BAYES = False
 DO_MAP = False
-DO_TESTING = False
+DO_TESTING = True
 
 if __name__ == "__main__":
     

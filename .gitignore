@@ -8,3 +8,7 @@ partPreprocessed/
 results/
 results/SHAP
 results/maps
+Bayes_test/Nephtyidae
+Bayes_test/Spionidae
+Bayes_test/figures
+Bayes_test/allSpecies
