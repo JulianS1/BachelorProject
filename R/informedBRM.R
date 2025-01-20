@@ -25,9 +25,8 @@ formula <- bf(
 )
 priors <- c(
   prior(normal(1, 2), class = "b", coef="Ba.1"),  # Coefficients for predictors
-  prior(normal(2, 2), class = "b", coef="Cd.1"),
-  prior(normal(-1, 2), class = "b", coef="Co.1"),
-  prior(normal(2, 2), class = "b", coef="Cu.1"),
+  prior(normal(-1, 2), class = "b", coef="Pb1"),
+  prior(normal(1, 1), class = "b", coef="Mud"),
   prior(normal(-1, 2), class = "b", coef="Naphthalene"),
   prior(normal(-1, 2), class = "b", coef="Perylene"),
   prior(normal(log(100), 2), class = "Intercept")  # Intercept
