@@ -2,6 +2,13 @@
 
 # ***Read***
 
+# *About This Project:*
+
+This project provides a framework using Bayesian Additive Regression Trees (BART), Bayesian Regression Models (BRM) and Random Forests (RF) to model the response of a specific species to changes in their environment and changes in pollution levels.
+
+
+
+
 The data is never pushed to GitHub to preserve privacy. In order for the project to run you must add some folders.
 
 the structure should be
