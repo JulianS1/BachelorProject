@@ -1,8 +1,8 @@
-# Bayes_test (Baschelor Project)
+# Bayes_test (Bachelor Project)
 
 # ***Read***
 
-This directory contains all the code for the different Bayesian architectures created in Python.
+This directory contains all the code for the different Bayesian architectures created in Python. The final pymc model is in the *Combined_bart.ipynb* folder.
 
 
 The data is never pushed to GitHub to preserve privacy. In order for the project to run you must add some folders.
