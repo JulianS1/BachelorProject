@@ -2,6 +2,9 @@
 
 # ***Read***
 
+This directory contains all the code for the different Bayesian architectures created in Python.
+
+
 The data is never pushed to GitHub to preserve privacy. In order for the project to run you must add some folders.
 
 
